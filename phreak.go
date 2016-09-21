@@ -6,6 +6,7 @@ import (
         "net/http"
         "sync"
         "github.com/gorilla/mux"
+        "github.com/johnny-morrice/sensephreak/internal/front"
 )
 
 func main() {
@@ -94,7 +95,12 @@ func (ph *phreak) serveweb() {
         api := &phapi{}
         api.commands = ph.commands
 
+        ports := ph.tests.activeports()
+        frontend := &front.Frontend{}
+        frontend.Ports = ports
+
         r := mux.NewRouter()
+        r.Handle("/", frontend).Methods("GET")
         r.HandleFunc("/api/test", api.newtest).Methods("POST")
         r.HandleFunc("/api/test/{resultset}", api.getresults).Methods("GET")
 
