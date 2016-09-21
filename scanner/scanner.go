@@ -47,77 +47,50 @@ type Scan struct {
 }
 
 func Launch(hostname string, apiport, conns int) (*Scan, error) {
-	newid := make(chan int)
-	errch := make(chan error)
-
 	scan := &Scan{}
 	scan.host = hostname
 	scan.apiport = apiport
 	scan.sem = make(chan struct{}, conns)
 
-	go func() {
-		url := scan.Apipath("/test", apiport)
+	url := scan.Apipath("/test", apiport)
+
+	resp, err := http.Post(url, jsontype, nilreader())
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to launch test")
+	}
+
+	defer resp.Body.Close()
+
+	var id int
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(&id)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to read id")
+	}
+
+        scan.Id = id
+
+        return scan, nil
+}
+
+func (scan *Scan) Ping(port int) error {
+        var ret error
+
+	scan.withlimit(func() {
+		url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), port)
 
 		resp, err := http.Post(url, jsontype, nilreader())
 
 		if err != nil {
-			errch <- errors.Wrap(err, "Failed to launch test")
-
-			return
+			ret = err
 		}
 
 		defer resp.Body.Close()
+	})
 
-		var id *int
-		dec := json.NewDecoder(resp.Body)
-		err = dec.Decode(id)
-
-		if err != nil {
-			errch <- errors.Wrap(err, "Failed to read id")
-
-			return
-		}
-
-		newid <- *id
-	}()
-
-	select {
-	case id := <-newid:
-
-		scan.Id = id
-		return scan, nil
-	case err := <-errch:
-		return nil, err
-	}
-}
-
-func (scan *Scan) Ping(port int) error {
-	errch := make(chan error)
-
-	go func() {
-		scan.withlimit(func() {
-			url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), port)
-
-			resp, err := http.Post(url, jsontype, nilreader())
-
-			if err != nil {
-				errch <- err
-			}
-
-			defer resp.Body.Close()
-		})
-
-		close(errch)
-	}()
-
-	err, ok := <-errch
-
-	if !ok {
-		// Was successful.
-		return nil
-	}
-
-	return err
+	return ret
 }
 
 func (scan *Scan) BadPorts() ([]int, error) {

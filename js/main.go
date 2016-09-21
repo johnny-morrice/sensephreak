@@ -12,25 +12,27 @@ func main() {
 }
 
 func Webscan(hostname string, apiport int, ports []int) {
-	failed, err := scanner.Scanall(hostname, apiport, ports)
+        go func() {
+        	failed, err := scanner.Scanall(hostname, apiport, ports)
 
-	if err == nil {
-		if len(failed) == 0 {
-			update("All tested ports are free.")
-		} else {
-			buff := &bytes.Buffer{}
-			buff.WriteString("Failed ports:<br/>")
+        	if err == nil {
+        		if len(failed) == 0 {
+        			update("All tested ports are free.")
+        		} else {
+        			buff := &bytes.Buffer{}
+        			buff.WriteString("Failed ports:<br/>")
 
-			for _, p := range failed {
-				fmt.Fprintf(buff, "%v<br/>", p)
-			}
+        			for _, p := range failed {
+        				fmt.Fprintf(buff, "%v<br/>", p)
+        			}
 
-			update(buff.String())
-		}
-	} else {
-		update("There was an error")
-		panic(err)
-	}
+        			update(buff.String())
+        		}
+        	} else {
+        		update("There was an error")
+        		panic(err)
+        	}
+        }()
 }
 
 func update(messageHtml string) {
