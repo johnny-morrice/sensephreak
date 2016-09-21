@@ -32,6 +32,10 @@ func resultsetparam(c ctrl.C) (uint64, error) {
 }
 
 func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+        // Forward declaration for goto.
+        res := &result{}
+        cmd := command{}
+
         c := ctrl.New(w, r)
 
         rset, err := resultsetparam(c)
@@ -41,17 +45,16 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
         }
 
-        go func() {
-                r := &result{}
-                r.port = tc.port
-                r.resultset = rset
+        res.port = tc.port
+        res.set = rset
 
-                cmd := command{}
-                cmd.ctype = _PING
-                cmd.ping = r
+        cmd.ctype = _PING
+        cmd.ping = res
 
-                tc.commands<- cmd
-        }()
+        tc.commands<- cmd
+
+        // Wait to be handled
+        <-res.done
 
         err = c.ServeJson(true)
 

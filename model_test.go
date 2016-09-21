@@ -29,10 +29,10 @@ func Test_activeports(t *testing.T) {
         }
 }
 
-func Test_pass(t *testing.T) {
+func Test_success(t *testing.T) {
         rset := mkresults()
 
-        rset.pass(90)
+        rset.success(90)
 
         expect := []int{80}
 

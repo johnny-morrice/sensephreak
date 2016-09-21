@@ -11,11 +11,7 @@ import (
 func main() {
         ports := makeportlist()
 
-        ph := &phreak{}
-        ph.commands = make(chan command)
-        ph.tests = &testset{}
-        ph.webport = webport
-        ph.bind = bindinter
+        ph := mkphreak()
 
         wg := sync.WaitGroup{}
 
@@ -43,6 +39,16 @@ func main() {
         }()
 
         wg.Wait()
+}
+
+func mkphreak() *phreak {
+        ph := &phreak{}
+        ph.commands = make(chan command)
+        ph.tests = &testset{}
+        ph.webport = webport
+        ph.bind = bindinter
+
+        return ph
 }
 
 func basicskip() map[int]struct{} {
@@ -147,19 +153,6 @@ func (ph *phreak) mainloop() {
         }
 }
 
-// ping the service to show you can access a port.
-func (ph *phreak) ping(r *result) error {
-        if !ph.okresultid(r.resultset) {
-                return fmt.Errorf("Bad result id: %v", r.resultset)
-        }
-
-        rset := ph.rsets[r.resultset]
-
-        rset.success(r.port)
-
-        return nil
-}
-
 // launch a new test.
 func (ph *phreak) launch(r *registration) {
         rset := &resultset{}
@@ -169,6 +162,24 @@ func (ph *phreak) launch(r *registration) {
         ph.rsets = append(ph.rsets, rset)
 
         r.newid<- id
+}
+
+// ping the service to show you can access a port.
+func (ph *phreak) ping(r *result) error {
+        if !ph.okresultid(r.set) {
+                return fmt.Errorf("Bad result id: %v", r.set)
+        }
+
+        rset := ph.rsets[r.set]
+
+        rset.success(r.port)
+
+        // We never need to wait for the channel to be read.
+        go func() {
+                r.done<- struct{}{}
+        }()
+
+        return nil
 }
 
 // badports responds to a query for the failing ports.
@@ -216,7 +227,8 @@ type registration struct {
 
 type result struct {
         port int
-        resultset uint64
+        set uint64
+        done chan struct{}
 }
 
 const webport = 80
