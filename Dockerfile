@@ -14,4 +14,4 @@ RUN go install github.com/johnny-morrice/sensephreak
 ENTRYPOINT /go/bin/outyet
 
 # Document that the service listens on port 8080.
-EXPOSE 1000-65536
+EXPOSE 1000-65535
