@@ -1,4 +1,4 @@
-package main
+package scanner
 
 import (
         "bytes"
@@ -8,49 +8,35 @@ import (
         "sync"
         "net/http"
         "github.com/pkg/errors"
-        "github.com/gopherjs/gopherjs/js"
 )
 
-func main() {
-	js.Global.Set("Scanall", Scanall)
-}
-
-func Scanall(hostname string, apiport int, ports []int) error {
+func Scanall(hostname string, apiport int, ports []int) ([]int, error) {
         scan, err := Launch(hostname, apiport, 50)
 
         if err != nil {
-                return err
+                return nil, err
         }
 
         wg := sync.WaitGroup{}
 
-        errch := make(chan error)
         wg.Add(len(ports))
+
         for _, p := range ports {
                 port := p
                 go func() {
-                        err := scan.Ping(port)
-
-                        errch<- err
+                        scan.Ping(port)
                         wg.Done()
                 }()
         }
-
-        buff := &bytes.Buffer{}
-        for err := range errch {
-                buff.WriteString(err.Error())
-                buff.WriteString("\n")
-        }
-
-        msg := buff.String()
-
         wg.Wait()
 
-        if msg != "" {
-                return errors.New(msg)
+        failed, err := scan.BadPorts()
+
+        if err != nil {
+                return nil, err
         }
 
-        return nil
+        return failed, nil
 }
 
 type Scan struct {
@@ -132,6 +118,28 @@ func (scan *Scan) Ping(port int) error {
         }
 
         return err
+}
+
+func (scan *Scan) BadPorts() ([]int, error) {
+        url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), scan.apiport)
+
+        resp, err := http.Get(url)
+
+        if err != nil {
+                return nil, errors.Wrap(err, "Failed to GET BadPorts")
+        }
+
+        defer resp.Body.Close()
+
+        ports := []int{}
+        dec := json.NewDecoder(resp.Body)
+        err = dec.Decode(&ports)
+
+        if err != nil {
+                return nil, errors.Wrap(err, "Failed to decode JSON in BadPorts")
+        }
+
+        return ports, nil
 }
 
 func (scan *Scan) withlimit(f func()) {
