@@ -12,34 +12,26 @@ type Frontend struct {
         Ports []int
 }
 
-func (fr *Frontend) javascript() string {
-        template, err := Asset("data/script.js")
+func (fr *Frontend) getasset(name string) string {
+        template, err := Asset(name)
 
         if err != nil {
                 panic(err)
         }
 
         return string(template)
+}
+
+func (fr *Frontend) javascript() string {
+        return fr.getasset("data/script.js")
 }
 
 func (fr *Frontend) html() string {
-        template, err := Asset("data/index.html")
-
-        if err != nil {
-                panic(err)
-        }
-
-        return string(template)
+        return fr.getasset("data/index.html")
 }
 
 func (fr *Frontend) css() string {
-        css, err := Asset("data/style.css")
-
-        if err != nil {
-                panic(err)
-        }
-
-        return string(css)
+        return fr.getasset("data/style.css")
 }
 
 func (fr *Frontend) IndexPage() []byte {
