@@ -1,5 +1,5 @@
-package front
-//go:generate go-bindata -pkg front data/
+//go:generate go-bindata data/
+package main
 
 import (
         "bytes"
@@ -8,11 +8,11 @@ import (
         "net/http"
 )
 
-type Frontend struct {
+type frontend struct {
         Ports []int
 }
 
-func (fr *Frontend) getasset(name string) string {
+func (fr *frontend) getasset(name string) string {
         template, err := Asset(name)
 
         if err != nil {
@@ -22,19 +22,19 @@ func (fr *Frontend) getasset(name string) string {
         return string(template)
 }
 
-func (fr *Frontend) javascript() string {
+func (fr *frontend) javascript() string {
         return fr.getasset("data/script.js")
 }
 
-func (fr *Frontend) html() string {
+func (fr *frontend) html() string {
         return fr.getasset("data/index.html")
 }
 
-func (fr *Frontend) css() string {
+func (fr *frontend) css() string {
         return fr.getasset("data/style.css")
 }
 
-func (fr *Frontend) IndexPage() []byte {
+func (fr *frontend) IndexPage() []byte {
         style := fr.css()
         js := fr.javascript()
         html := fr.html()
@@ -64,7 +64,7 @@ func (fr *Frontend) IndexPage() []byte {
         return buff.Bytes()
 }
 
-func (fr *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fr *frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         page := fr.IndexPage()
 
         w.Write(page)
