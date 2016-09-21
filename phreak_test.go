@@ -1,87 +1,87 @@
 package main
 
 import (
-        "testing"
+	"testing"
 )
 
 func Test_launch(t *testing.T) {
-        ph := mkphreak()
+	ph := mkphreak()
 
-        expectA := 0
-        expectB := 1
+	expectA := 0
+	expectB := 1
 
-        reg := &registration{}
-        reg.newid = make(chan int)
+	reg := &registration{}
+	reg.newid = make(chan int)
 
-        go ph.launch(reg)
+	go ph.launch(reg)
 
-        actualA := <-reg.newid
+	actualA := <-reg.newid
 
-        if actualA != expectA {
-                t.Error("Expected %v but received %v", expectA, actualA)
-        }
+	if actualA != expectA {
+		t.Error("Expected %v but received %v", expectA, actualA)
+	}
 
-        go ph.launch(reg)
+	go ph.launch(reg)
 
-        actualB := <-reg.newid
+	actualB := <-reg.newid
 
-        if actualB != expectB {
-                t.Error("Expected %v but received %v", expectB, actualB)
-        }
+	if actualB != expectB {
+		t.Error("Expected %v but received %v", expectB, actualB)
+	}
 }
 func Test_ping(t *testing.T) {
-        ph := mkphreak()
+	ph := mkphreak()
 
-        reg := &registration{}
-        reg.newid = make(chan int)
+	reg := &registration{}
+	reg.newid = make(chan int)
 
-        go ph.launch(reg)
+	go ph.launch(reg)
 
-        rset := <-reg.newid
+	rset := <-reg.newid
 
-        res := &result{}
-        res.port = 80
-        res.set = uint64(rset)
-        res.done = make(chan struct{})
+	res := &result{}
+	res.port = 80
+	res.set = uint64(rset)
+	res.done = make(chan struct{})
 
-        go ph.ping(res)
+	go ph.ping(res)
 
-        <-res.done
+	<-res.done
 }
 func Test_badports(t *testing.T) {
-        ph := mkphreak()
+	ph := mkphreak()
 
-        reg := &registration{}
-        reg.newid = make(chan int)
+	reg := &registration{}
+	reg.newid = make(chan int)
 
-        go ph.launch(reg)
+	go ph.launch(reg)
 
-        rset := <-reg.newid
+	rset := <-reg.newid
 
-        res := &result{}
-        res.port = 80
-        res.set = uint64(rset)
-        res.done = make(chan struct{})
+	res := &result{}
+	res.port = 80
+	res.set = uint64(rset)
+	res.done = make(chan struct{})
 
-        go ph.ping(res)
+	go ph.ping(res)
 
-        <-res.done
+	<-res.done
 
-        q := &query{}
-        q.rset = uint64(rset)
-        q.failports = make(chan []int)
+	q := &query{}
+	q.rset = uint64(rset)
+	q.failports = make(chan []int)
 
-        go ph.badports(q)
+	go ph.badports(q)
 
-        expect := []int{90}
+	expect := []int{90}
 
-        actual := <-q.failports
+	actual := <-q.failports
 
-        for i, acp := range actual {
-                exp := expect[i]
+	for i, acp := range actual {
+		exp := expect[i]
 
-                if acp != exp {
-                        t.Error("Expected %v but received %v", exp, acp)
-                }
-        }
+		if acp != exp {
+			t.Error("Expected %v but received %v", exp, acp)
+		}
+	}
 }
