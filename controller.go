@@ -8,6 +8,7 @@ import (
         "github.com/johnny-morrice/ctrl"
 )
 
+// testcase is a controller that runs on the given port.
 type testcase struct {
         port int
         set *testset
@@ -66,7 +67,7 @@ ERROR:
         }
 }
 
-
+// phapi is the API controller.
 type phapi struct {
         commands chan<- command
 }

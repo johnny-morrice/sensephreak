@@ -71,6 +71,7 @@ func makeportlist() []int {
         return ports
 }
 
+// phreak checks if your firewall is blocking you from seeing some ports.
 type phreak struct {
         tests *testset
         rsets []*resultset
@@ -79,6 +80,7 @@ type phreak struct {
         bind string
 }
 
+// serveweb runs a webserver for the main API and web interface.
 func (ph *phreak) serveweb() {
         srv := &http.Server{}
         srv.Addr = fmt.Sprintf("%v:%v", ph.bind, ph.webport)
@@ -95,6 +97,7 @@ func (ph *phreak) serveweb() {
         srv.ListenAndServe()
 }
 
+// servetest runs a webserver on the given port for the /ping API call.
 func (ph *phreak) servetest(port int) {
         srv := &http.Server{}
         srv.Addr = fmt.Sprintf("%v:%v", ph.bind, port)
@@ -109,6 +112,8 @@ func (ph *phreak) servetest(port int) {
         srv.ListenAndServe()
 }
 
+// addtestcase adds a new test case to the set for the given port, and returns
+// it.
 func (ph *phreak) addtestcase(port int) *testcase {
         tcase := &testcase{}
         tcase.port = port
@@ -120,6 +125,8 @@ func (ph *phreak) addtestcase(port int) *testcase {
         return tcase
 }
 
+// mailoop executes the main application logic loop.  Controller actions
+// communicate with the loop over the `commands` channel.
 func (ph *phreak) mainloop() {
         for cmd := range ph.commands {
                 var err error
@@ -140,6 +147,7 @@ func (ph *phreak) mainloop() {
         }
 }
 
+// ping the service to show you can access a port.
 func (ph *phreak) ping(r *result) error {
         if !ph.okresultid(r.resultset) {
                 return fmt.Errorf("Bad result id: %v", r.resultset)
@@ -147,15 +155,12 @@ func (ph *phreak) ping(r *result) error {
 
         rset := ph.rsets[r.resultset]
 
-        rset.pass(r.port)
+        rset.success(r.port)
 
         return nil
 }
 
-func (ph *phreak) okresultid(resultset uint64) bool {
-        return int(resultset) < len(ph.rsets)
-}
-
+// launch a new test.
 func (ph *phreak) launch(r *registration) {
         rset := &resultset{}
         rset.tests = ph.tests
@@ -166,6 +171,7 @@ func (ph *phreak) launch(r *registration) {
         r.newid<- id
 }
 
+// badports responds to a query for the failing ports.
 func (ph *phreak) badports(q *query) error {
         if !ph.okresultid(q.rset) {
                 close(q.failports)
@@ -181,6 +187,10 @@ func (ph *phreak) badports(q *query) error {
         return nil
 }
 
+func (ph *phreak) okresultid(resultset uint64) bool {
+        return int(resultset) < len(ph.rsets)
+}
+
 type comtype uint8
 const (
         _NEWTEST = iota
@@ -193,6 +203,20 @@ type command struct {
         reg *registration
         query *query
         ping *result
+}
+
+type query struct {
+        rset uint64
+        failports chan []int
+}
+
+type registration struct {
+        newid chan int
+}
+
+type result struct {
+        port int
+        resultset uint64
 }
 
 const webport = 80

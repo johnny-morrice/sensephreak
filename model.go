@@ -1,11 +1,12 @@
 package main
 
-
+// testset is a specification of the ports that will be tested.
 type testset struct {
         cases []*testcase
         portcache []int
 }
 
+// activeports returns the ports that will be tested.
 func (tset *testset) activeports() []int {
         if tset.portcache != nil {
                 return tset.portcache
@@ -22,24 +23,18 @@ func (tset *testset) activeports() []int {
         return ports
 }
 
-type query struct {
-        rset uint64
-        failports chan []int
-}
-
-type registration struct {
-        newid chan int
-}
-
+// resultset represents a running or completed test.
 type resultset struct {
         tests *testset
         passing []int
 }
 
-func (rset *resultset) pass(port int) {
+// success means the port has passed the test.
+func (rset *resultset) success(port int) {
         rset.passing = append(rset.passing, port)
 }
 
+// failports returns the ports that fail the test.
 func (rset *resultset) failports() []int {
         active := rset.tests.activeports()
 
@@ -60,9 +55,4 @@ func (rset *resultset) failports() []int {
         }
 
         return bad
-}
-
-type result struct {
-        port int
-        resultset uint64
 }
