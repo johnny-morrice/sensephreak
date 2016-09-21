@@ -9,4 +9,5 @@ sensephreak
 # Generated stuff.
 bindata.go
 script.js
+script.js.map
 vendor

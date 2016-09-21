@@ -54,7 +54,7 @@ func Launch(hostname string, apiport, conns int) (*Scan, error) {
 
 	url := scan.Apipath("/test", apiport)
 
-	resp, err := http.Post(url, jsontype, nilreader())
+	resp, err := http.Post(url, plaintype, nilreader())
 
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to launch test")
@@ -81,10 +81,12 @@ func (scan *Scan) Ping(port int) error {
 	scan.withlimit(func() {
 		url := scan.Apipath(fmt.Sprintf("/test/%v/ping", scan.Id), port)
 
-		resp, err := http.Post(url, jsontype, nilreader())
+		resp, err := http.Post(url, plaintype, nilreader())
 
 		if err != nil {
 			ret = err
+
+			return
 		}
 
 		defer resp.Body.Close()
@@ -131,4 +133,4 @@ func nilreader() io.Reader {
 	return &bytes.Buffer{}
 }
 
-const jsontype = ""
+const plaintype = "text/plain"

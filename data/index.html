@@ -6,7 +6,7 @@
     <meta name="keywords" content="">
     <meta name="author" content="">
     <title>Firewall Blocked Port Scanner</title>
-    <script>{{.Javascript}}</script>
+    <script src="script.js"></script>
     <script>
     function scan() {
       var ports = [{{range $index, $port := .Ports }}{{if (gt $index 0)}},{{end}}{{$port}}{{end}}];

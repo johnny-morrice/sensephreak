@@ -1,5 +1,4 @@
 //go:generate gopherjs build -m -o data/script.js js/main.go
-//go:generate rm data/script.js.map
 //go:generate go-bindata data/
 package main
 
@@ -14,6 +13,7 @@ type frontend struct {
 	ports   []int
 	host    string
 	apiport int
+        cache []byte
 }
 
 func (fr *frontend) getasset(name string) string {
@@ -26,8 +26,12 @@ func (fr *frontend) getasset(name string) string {
 	return string(template)
 }
 
-func (fr *frontend) javascript() string {
+func (fr *frontend) script() string {
 	return fr.getasset("data/script.js")
+}
+
+func (fr *frontend) srcmap() string {
+        return fr.getasset("data/script.js.map")
 }
 
 func (fr *frontend) html() string {
@@ -38,14 +42,16 @@ func (fr *frontend) css() string {
 	return fr.getasset("data/style.css")
 }
 
-func (fr *frontend) IndexPage() []byte {
+func (fr *frontend) indexpage() []byte {
+        if fr.cache != nil {
+                return fr.cache
+        }
+
 	style := fr.css()
-	js := fr.javascript()
 	html := fr.html()
 
 	type Variables struct {
 		Css        string
-		Javascript string
 		Ports      []int
 		Hostname   string
 		Apiport    int
@@ -53,7 +59,6 @@ func (fr *frontend) IndexPage() []byte {
 
 	variables := Variables{
 		Css:        style,
-		Javascript: js,
 		Ports:      fr.ports,
 		Apiport:    fr.apiport,
 		Hostname:   fr.host,
@@ -69,11 +74,25 @@ func (fr *frontend) IndexPage() []byte {
 
 	tmpl.Execute(buff, variables)
 
-	return buff.Bytes()
+	fr.cache = buff.Bytes()
+
+        return fr.cache
 }
 
-func (fr *frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	page := fr.IndexPage()
+func (fr *frontend) index(w http.ResponseWriter, r *http.Request) {
+	page := fr.indexpage()
 
 	w.Write(page)
+}
+
+func (fr *frontend) javascript(w http.ResponseWriter, r *http.Request) {
+        js := fr.script()
+
+        w.Write([]byte(js))
+}
+
+func (fr *frontend) sourcemap(w http.ResponseWriter, r *http.Request) {
+        m := fr.srcmap()
+
+        w.Write([]byte(m))
 }
