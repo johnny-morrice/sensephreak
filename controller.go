@@ -46,6 +46,7 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	res.port = tc.port
 	res.set = rset
+        res.done = make(chan struct{})
 
 	cmd.ctype = _PING
 	cmd.ping = res
