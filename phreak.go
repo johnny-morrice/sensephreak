@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"sync"
+        "github.com/gorilla/mux"
 )
 
 func main() {
@@ -97,7 +97,7 @@ func (ph *phreak) serveweb() {
 
 	front := &frontend{}
 	front.ports = ph.tests.activeports()
-	front.host = host
+	front.host = hostname
 	front.apiport = webport
 
 	r := mux.NewRouter()
@@ -118,9 +118,12 @@ func (ph *phreak) servetest(port int) {
 	tcase := ph.addtestcase(port)
 
 	r := mux.NewRouter()
-	r.Handle("/api/test/{resultset}/ping", tcase).Methods("POST")
+	r.Handle("/api/test/{resultset}/ping", tcase)
 
-	srv.Handler = r
+        // Use CORS to allow all origins.
+        handler := newcorshandler(r, fmt.Sprintf("http://%v", hostname))
+
+	srv.Handler = handler
 
 	srv.ListenAndServe()
 }
@@ -240,7 +243,7 @@ type result struct {
 }
 
 const webport = 80
-const host = "172.17.0.2"
+const hostname = "172.17.0.2"
 const bindinter = "0.0.0.0"
 const sysportmax = 1000
 const portmax = 65536

@@ -79,7 +79,7 @@ func (scan *Scan) Ping(port int) error {
         var ret error
 
 	scan.withlimit(func() {
-		url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), port)
+		url := scan.Apipath(fmt.Sprintf("/test/%v/ping", scan.Id), port)
 
 		resp, err := http.Post(url, jsontype, nilreader())
 
@@ -124,7 +124,7 @@ func (scan *Scan) withlimit(f func()) {
 }
 
 func (scan *Scan) Apipath(part string, port int) string {
-	return fmt.Sprintf("http://%v:%v/api/%v", scan.host, port, part)
+	return fmt.Sprintf("http://%v:%v/api%v", scan.host, port, part)
 }
 
 func nilreader() io.Reader {

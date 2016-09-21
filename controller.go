@@ -42,7 +42,6 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		goto ERROR
-
 	}
 
 	res.port = tc.port
@@ -51,7 +50,7 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cmd.ctype = _PING
 	cmd.ping = res
 
-	tc.commands <- cmd
+	tc.commands<- cmd
 
 	// Wait to be handled
 	<-res.done
@@ -96,7 +95,7 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
 	cmd.ctype = _GETRESULT
 	cmd.query = q
 
-	api.commands <- cmd
+	api.commands<- cmd
 
 	badports, ok = <-q.failports
 
@@ -141,4 +140,51 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 
 		c.InternalError()
 	}
+}
+
+type corshandler struct {
+	handler http.Handler
+	allowed map[string]struct{}
+	headers []string
+}
+
+func newcorshandler(h http.Handler, origins... string) http.Handler {
+	ch := corshandler{}
+	ch.handler = h
+	ch.headers = []string{"Content-Type"}
+
+	ch.allowed = map[string]struct{}{}
+	for _, o := range origins {
+		ch.allowed[o] = struct{}{}
+	}
+
+	return ch
+}
+
+func (ch corshandler) cors(w http.ResponseWriter, req *http.Request) {
+	originheads := req.Header["Origin"]
+
+	var origin string
+	if len(originheads) == 1 {
+		origin = originheads[0]
+	} else {
+                log.Printf("Bad Origin header: %v", originheads)
+        }
+
+        _, any := ch.allowed["*"];
+        _, ok := ch.allowed[origin];
+
+        if any || ok {
+		w.Header()["Access-Control-Allow-Origin"] = []string{origin}
+		w.Header()["Access-Control-Allow-Headers"] = ch.headers
+	}
+}
+
+func (ch corshandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	ch.cors(w, req)
+	if req.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		ch.handler.ServeHTTP(w, req)
+        }
 }
