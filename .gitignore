@@ -7,5 +7,5 @@
 sensephreak
 
 # Generated stuff.
-internal/front/bindata.go
+bindata.go
 vendor
