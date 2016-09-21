@@ -11,7 +11,7 @@ ADD . /go/src/github.com/johnny-morrice/sensephreak
 RUN go install github.com/johnny-morrice/sensephreak
 
 # Run the outyet command by default when the container starts.
-ENTRYPOINT /go/bin/outyet
+ENTRYPOINT /go/bin/sensephreak
 
 # Document that the service listens on port 8080.
 EXPOSE 1000-65535
