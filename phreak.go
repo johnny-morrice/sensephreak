@@ -13,13 +13,19 @@ func main() {
 
 	ph := mkphreak()
 
+        tests := make([]*testcase, len(ports))
+
+        for i, p := range ports {
+                tests[i] = ph.addtestcase(p)
+        }
+
 	wg := sync.WaitGroup{}
 
-	wg.Add(len(ports))
-	for _, p := range ports {
-		port := p
+	wg.Add(len(tests))
+	for _, tc := range tests {
+		tcase := tc
 		go func() {
-			ph.servetest(port)
+			ph.servetest(tcase)
 
 			wg.Done()
 		}()
@@ -111,11 +117,9 @@ func (ph *phreak) serveweb() {
 }
 
 // servetest runs a webserver on the given port for the /ping API call.
-func (ph *phreak) servetest(port int) {
+func (ph *phreak) servetest(tcase *testcase) {
 	srv := &http.Server{}
-	srv.Addr = fmt.Sprintf("%v:%v", ph.bind, port)
-
-	tcase := ph.addtestcase(port)
+	srv.Addr = fmt.Sprintf("%v:%v", ph.bind, tcase.port)
 
 	r := mux.NewRouter()
 	r.Handle("/api/test/{resultset}/ping", tcase)
