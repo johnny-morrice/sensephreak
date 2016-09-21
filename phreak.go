@@ -184,10 +184,7 @@ func (ph *phreak) ping(r *result) error {
 
 	rset.success(r.port)
 
-	// We never need to wait for the channel to be read.
-	go func() {
-		r.done <- struct{}{}
-	}()
+	r.done <- struct{}{}
 
 	return nil
 }
