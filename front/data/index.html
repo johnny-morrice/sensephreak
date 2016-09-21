@@ -7,6 +7,12 @@
     <meta name="author" content="">
     <title>Firewall Blocked Port Scanner</title>
     <script>{{.Javascript}}</script>
+    <script>
+    function scan() {
+      var ports = [{{range $index, $port := .Ports }}{{if (gt $index 0)}},{{end}}{{$port}}{{end}}];
+      ping_all(ports);
+    }
+    </script>
     <style>{{.Css}}</style>
   </head>
   <body onload="scan()">

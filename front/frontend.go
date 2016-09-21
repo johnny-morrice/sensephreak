@@ -50,11 +50,13 @@ func (fr *Frontend) IndexPage() []byte {
         type Variables struct {
                 Css string
                 Javascript string
+                Ports []int
         }
 
         variables := Variables{
                 Css: style,
                 Javascript: js,
+                Ports: fr.Ports,
         }
 
         buff := &bytes.Buffer{}

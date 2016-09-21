@@ -16,21 +16,22 @@ func main() {
 
         wg := sync.WaitGroup{}
 
+        wg.Add(len(ports))
+        for _, p := range ports {
+                port := p
+                go func() {
+                        ph.servetest(port)
+
+                        wg.Done()
+                }()
+        }
+
         wg.Add(1)
         go func() {
                 ph.serveweb()
 
                 wg.Done()
         }()
-
-        wg.Add(len(ports))
-        for _, p := range ports {
-                go func() {
-                        ph.servetest(p)
-
-                        wg.Done()
-                }()
-        }
 
         wg.Add(1)
         go func() {
@@ -95,9 +96,8 @@ func (ph *phreak) serveweb() {
         api := &phapi{}
         api.commands = ph.commands
 
-        ports := ph.tests.activeports()
         frontend := &front.Frontend{}
-        frontend.Ports = ports
+        frontend.Ports = ph.tests.activeports()
 
         r := mux.NewRouter()
         r.Handle("/", frontend).Methods("GET")
