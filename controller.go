@@ -33,7 +33,7 @@ func resultsetparam(c ctrl.C) (uint64, error) {
 
 func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Forward declaration for goto.
-	res := &result{}
+	res := result{}
 	cmd := command{}
 
 	c := ctrl.New(w, r)
@@ -77,7 +77,7 @@ type phapi struct {
 
 func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
 	// Forward declare variables because we are using goto
-	q := &query{}
+	q := query{}
 	cmd := command{}
 	var badports []int
 	var ok bool
@@ -123,7 +123,7 @@ ERROR:
 func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 	c := ctrl.New(w, r)
 
-	reg := &registration{}
+	reg := registration{}
 	reg.newid = make(chan int)
 
 	cmd := command{}

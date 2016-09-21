@@ -168,7 +168,7 @@ func (ph *phreak) mainloop() {
 }
 
 // launch a new test.
-func (ph *phreak) launch(r *registration) {
+func (ph *phreak) launch(r registration) {
 	rset := &resultset{}
 	rset.tests = ph.tests
 
@@ -179,7 +179,7 @@ func (ph *phreak) launch(r *registration) {
 }
 
 // ping the service to show you can access a port.
-func (ph *phreak) ping(r *result) error {
+func (ph *phreak) ping(r result) error {
 	if !ph.okresultid(r.set) {
 		return fmt.Errorf("Bad result id: %v", r.set)
 	}
@@ -194,7 +194,7 @@ func (ph *phreak) ping(r *result) error {
 }
 
 // badports responds to a query for the failing ports.
-func (ph *phreak) badports(q *query) error {
+func (ph *phreak) badports(q query) error {
 	if !ph.okresultid(q.rset) {
 		close(q.failports)
 		return fmt.Errorf("Bad result id: %v", q.rset)
@@ -223,9 +223,9 @@ const (
 
 type command struct {
 	ctype comtype
-	reg   *registration
-	query *query
-	ping  *result
+	reg   registration
+	query query
+	ping  result
 }
 
 type query struct {
