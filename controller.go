@@ -16,7 +16,7 @@ type testcase struct {
 }
 
 func resultsetparam(c ctrl.C) (uint64, error) {
-	resultset, err := c.Var("resultset")
+	resultset, err := c.GetMuxVar("resultset")
 
 	if err != nil {
 		return 0, err
