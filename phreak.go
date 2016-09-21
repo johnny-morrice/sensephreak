@@ -86,7 +86,7 @@ func (ph *phreak) serveweb() {
         srv.Addr = fmt.Sprintf("%v:%v", ph.bind, ph.webport)
 
         api := &phapi{}
-        api.ph = ph
+        api.commands = ph.commands
 
         r := mux.NewRouter()
         r.HandleFunc("/api/test", api.newtest).Methods("POST")
@@ -136,7 +136,7 @@ func (ph *phreak) mainloop() {
                 }
 
                 if err != nil {
-                        log.Printf("Error in async action: %v", err)
+                        log.Printf("Error in mainloop: %v", err)
                         err = nil
                 }
         }
@@ -168,12 +168,13 @@ func (ph *phreak) launch(r *registration) {
         r.newid<- id
 }
 
-func (ph *phreak) badports(q *resultquery) error {
-        if !ph.okresultid(q.resultset) {
-                return fmt.Errorf("Bad result id: %v", q.resultset)
+func (ph *phreak) badports(q *query) error {
+        if !ph.okresultid(q.rset) {
+                close(q.failports)
+                return fmt.Errorf("Bad result id: %v", q.rset)
         }
 
-        rset := ph.rsets[q.resultset]
+        rset := ph.rsets[q.rset]
 
         badports := rset.failports()
 
@@ -192,22 +193,84 @@ const (
 type command struct {
         ctype comtype
         reg *registration
-        query *resultquery
+        query *query
         ping *result
 }
 
 type phapi struct {
-        ph *phreak
+        commands chan<- command
 }
 
 func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
+        // Forward declare variables because we are using goto
+        q := &query{}
+        cmd := command{}
+        var badports []int
+        var ok bool
+
+        c := ctrl.New(w, r)
+
+        resultset, err := resultsetparam(c)
+
+        if err != nil {
+                goto ERROR
+        }
+
+        q.rset = resultset
+        q.failports = make(chan []int)
+
+        cmd.ctype = _GETRESULT
+        cmd.query = q
+
+        api.commands<- cmd
+
+        badports, ok = <-q.failports
+
+        if !ok {
+                err = fmt.Errorf("Return channel closed")
+
+                goto ERROR
+        }
+
+        err = c.ServeJson(badports)
+
+        if err == nil {
+                return
+        }
+
+ERROR:
+        if err != nil {
+                log.Printf("Error in getresults: %v", err)
+
+                c.InternalError()
+        }
 }
 
 func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
+        c := ctrl.New(w, r)
+
+        reg := &registration{}
+        reg.newid = make(chan int)
+
+        cmd := command{}
+        cmd.ctype = _NEWTEST
+        cmd.reg = reg
+
+        api.commands<- cmd
+
+        id := <-reg.newid
+
+        err := c.ServeJson(id)
+
+        if err != nil {
+                log.Printf("Error in newtest: %v", err)
+
+                c.InternalError()
+        }
 }
 
-type resultquery struct {
-        resultset uint64
+type query struct {
+        rset uint64
         failports chan []int
 }
 
@@ -221,28 +284,36 @@ type testcase struct {
         commands chan<- command
 }
 
+func resultsetparam(c ctrl.C) (uint64, error) {
+        resultset, err := c.Var("resultset")
+
+        if err != nil {
+                return 0, err
+        }
+
+        setid, err := strconv.ParseUint(resultset, 10, 64)
+
+        if err != nil {
+                return 0, err
+        }
+
+        return setid, nil
+}
+
 func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         c := ctrl.New(w, r)
 
-        resultset, err := c.Var("resultset")
-
-        var setid uint64
+        rset, err := resultsetparam(c)
 
         if err != nil {
                 goto ERROR
 
-        }
-
-        setid, err = strconv.ParseUint(resultset, 10, 64)
-
-        if err != nil {
-                goto ERROR
         }
 
         go func() {
                 r := &result{}
                 r.port = tc.port
-                r.resultset = setid
+                r.resultset = rset
 
                 cmd := command{}
                 cmd.ctype = _PING
@@ -253,12 +324,15 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
         err = c.ServeJson(true)
 
+        if err == nil {
+                return
+        }
+
 ERROR:
         if err != nil {
                 log.Printf("Error in testcase handler: %v", err)
 
                 c.InternalError()
-                return
         }
 }
 

@@ -1,0 +1,42 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ServeHTTP	phreak.go	/^func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {$/;"	f
+_GETRESULT	phreak.go	/^        _GETRESULT$/;"	c
+_NEWTEST	phreak.go	/^        _NEWTEST = iota$/;"	c
+_PING	phreak.go	/^        _PING$/;"	c
+activeports	phreak.go	/^func (tset *testset) activeports() []int {$/;"	f
+addtestcase	phreak.go	/^func (ph *phreak) addtestcase(port int) *testcase {$/;"	f
+badports	phreak.go	/^func (ph *phreak) badports(q *query) error {$/;"	f
+basicskip	phreak.go	/^func basicskip() map[int]struct{} {$/;"	f
+bindinter	phreak.go	/^const bindinter = "0.0.0.0"$/;"	c
+command	phreak.go	/^type command struct {$/;"	t
+comtype	phreak.go	/^type comtype uint8$/;"	t
+failports	phreak.go	/^func (rset *resultset) failports() []int {$/;"	f
+getresults	phreak.go	/^func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {$/;"	f
+launch	phreak.go	/^func (ph *phreak) launch(r *registration) {$/;"	f
+main	phreak.go	/^func main() {$/;"	f
+main	phreak.go	/^package main$/;"	p
+mainloop	phreak.go	/^func (ph *phreak) mainloop() {$/;"	f
+makeportlist	phreak.go	/^func makeportlist() []int {$/;"	f
+newtest	phreak.go	/^func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {$/;"	f
+okresultid	phreak.go	/^func (ph *phreak) okresultid(resultset uint64) bool {$/;"	f
+pass	phreak.go	/^func (rset *resultset) pass(port int) {$/;"	f
+phapi	phreak.go	/^type phapi struct {$/;"	t
+phreak	phreak.go	/^type phreak struct {$/;"	t
+ping	phreak.go	/^func (ph *phreak) ping(r *result) error {$/;"	f
+portmax	phreak.go	/^const portmax = 65536$/;"	c
+query	phreak.go	/^type query struct {$/;"	t
+registration	phreak.go	/^type registration struct {$/;"	t
+result	phreak.go	/^type result struct {$/;"	t
+resultset	phreak.go	/^type resultset struct {$/;"	t
+resultsetparam	phreak.go	/^func resultsetparam(c ctrl.C) {$/;"	f
+servetest	phreak.go	/^func (ph *phreak) servetest(port int) {$/;"	f
+serveweb	phreak.go	/^func (ph *phreak) serveweb() {$/;"	f
+sysportmax	phreak.go	/^const sysportmax = 1000$/;"	c
+testcase	phreak.go	/^type testcase struct {$/;"	t
+testset	phreak.go	/^type testset struct {$/;"	t
+webport	phreak.go	/^const webport = 80$/;"	c
