@@ -6,7 +6,7 @@ import (
         "net/http"
         "sync"
         "github.com/gorilla/mux"
-        "github.com/johnny-morrice/sensephreak/internal/front"
+        "github.com/johnny-morrice/sensephreak/front"
 )
 
 func main() {
