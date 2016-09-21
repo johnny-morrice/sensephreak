@@ -1,7 +1,10 @@
-//go:generate go-bindata -pkg front data/
 package front
+//go:generate go-bindata -pkg front data/
 
 import (
+        "bytes"
+        // We only generate from trusted data so text/template is fine.
+        "text/template"
         "net/http"
 )
 
@@ -39,8 +42,36 @@ func (fr *Frontend) css() string {
         return string(css)
 }
 
-func (fr *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-        page := fr.html()
+func (fr *Frontend) IndexPage() []byte {
+        style := fr.css()
+        js := fr.javascript()
+        html := fr.html()
 
-        w.Write([]byte(page))
+        type Variables struct {
+                Css string
+                Javascript string
+        }
+
+        variables := Variables{
+                Css: style,
+                Javascript: js,
+        }
+
+        buff := &bytes.Buffer{}
+
+        tmpl, err := template.New("index.html").Parse(html)
+
+        if err != nil {
+                panic(err)
+        }
+
+        tmpl.Execute(buff, variables)
+
+        return buff.Bytes()
+}
+
+func (fr *Frontend) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+        page := fr.IndexPage()
+
+        w.Write(page)
 }
