@@ -1,3 +1,5 @@
+
+//go:generate gopherjs build -m -o data/script.js scanner/scanner.go
 //go:generate go-bindata data/
 package main
 

@@ -1,4 +1,4 @@
-package scanner
+package main
 
 import (
         "bytes"
@@ -8,7 +8,12 @@ import (
         "sync"
         "net/http"
         "github.com/pkg/errors"
+        "github.com/gopherjs/gopherjs/js"
 )
+
+func main() {
+	js.Global.Set("Scanall", Scanall)
+}
 
 func Scanall(hostname string, apiport int, ports []int) error {
         scan, err := Launch(hostname, apiport, 50)
