@@ -10,7 +10,7 @@
     <script>
     function scan() {
       var ports = [{{range $index, $port := .Ports }}{{if (gt $index 0)}},{{end}}{{$port}}{{end}}];
-      ping_all("", ports);
+      Scanall("{{.Hostname}}", {{.Apiport}}, ports);
     }
     </script>
     <style>{{.Css}}</style>

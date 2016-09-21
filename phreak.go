@@ -96,7 +96,9 @@ func (ph *phreak) serveweb() {
         api.commands = ph.commands
 
         front := &frontend{}
-        front.Ports = ph.tests.activeports()
+        front.ports = ph.tests.activeports()
+        front.host = host
+        front.apiport = webport
 
         r := mux.NewRouter()
         r.Handle("/", front).Methods("GET")
@@ -237,6 +239,7 @@ type result struct {
 }
 
 const webport = 80
+const host = "172.17.0.2"
 const bindinter = "0.0.0.0"
 const sysportmax = 1000
 const portmax = 65536

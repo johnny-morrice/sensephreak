@@ -9,7 +9,9 @@ import (
 )
 
 type frontend struct {
-        Ports []int
+        ports []int
+        host string
+        apiport int
 }
 
 func (fr *frontend) getasset(name string) string {
@@ -43,12 +45,16 @@ func (fr *frontend) IndexPage() []byte {
                 Css string
                 Javascript string
                 Ports []int
+                Hostname string
+                Apiport int
         }
 
         variables := Variables{
                 Css: style,
                 Javascript: js,
-                Ports: fr.Ports,
+                Ports: fr.ports,
+                Apiport: fr.apiport,
+                Hostname: fr.host,
         }
 
         buff := &bytes.Buffer{}
