@@ -10,7 +10,7 @@ type Frontend struct {
 }
 
 func (fr *Frontend) javascript() string {
-        template, err := Asset("script.js")
+        template, err := Asset("data/script.js")
 
         if err != nil {
                 panic(err)
@@ -20,7 +20,7 @@ func (fr *Frontend) javascript() string {
 }
 
 func (fr *Frontend) html() string {
-        template, err := Asset("index.html")
+        template, err := Asset("data/index.html")
 
         if err != nil {
                 panic(err)
@@ -30,7 +30,7 @@ func (fr *Frontend) html() string {
 }
 
 func (fr *Frontend) css() string {
-        css, err := Asset("style.css")
+        css, err := Asset("data/style.css")
 
         if err != nil {
                 panic(err)
