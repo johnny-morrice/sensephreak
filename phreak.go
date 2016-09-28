@@ -249,5 +249,6 @@ type result struct {
 const webport = 80
 const hostname = "172.17.0.2"
 const bindinter = "0.0.0.0"
-const sysportmax = 1000
+// TODO configurable port options, so we can turn sysportmax back to 1000.
+const sysportmax = 0
 const portmax = 65536

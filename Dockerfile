@@ -6,4 +6,4 @@ RUN go install github.com/johnny-morrice/sensephreak
 
 ENTRYPOINT /go/bin/sensephreak
 
-EXPOSE 1000-65535
+EXPOSE 1-65535
