@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/johnny-morrice/sensephreak/scanner"
@@ -11,49 +10,103 @@ func main() {
 	js.Global.Set("Webscan", Webscan)
 }
 
-func Webscan(opts *js.Object) {
+func Webscan(opts map[string]interface{}, success func(badports []int), failure func(err string)) {
 	scan := &scanner.Scan{}
 
-	scan.Host = opts.Get("hostname").String()
-	scan.Apiport = opts.Get("apiport").Int()
-	scan.Conns = opts.Get("conns").Int()
+	var badparam string
 
-	portopts := opts.Get("ports")
-	scan.Ports = make([]int, portopts.Length())
+	params := make([]interface{}, 4)
+	keys := []string {"hostname", "apiport", "conns", "ports"}
 
-	for i := 0; i < portopts.Length(); i++ {
-		scan.Ports[i] = portopts.Index(i).Int()
+	var ok bool
+	var host string
+	var apiport int
+	var conns int
+	var ports []interface{}
+
+	for i, k := range keys {
+		p, ok := opts[k]
+
+		if !ok {
+			badparam = k
+			break
+		}
+
+		params[i] = p
 	}
 
-	update("Scanning...")
+	if badparam != "" {
+		failure(fmt.Sprintf("Missing parameter: %v", badparam))
+		return
+	}
 
-	scan.Launch()
+	host, ok = params[0].(string)
+
+	if !ok {
+		badparam = "hostname"
+		goto BADINPUT
+	}
+
+	apiport, ok = params[1].(int)
+
+	if !ok {
+		badparam = "apiport"
+		goto BADINPUT
+	}
+
+	conns, ok = params[2].(int)
+
+	if !ok {
+		badparam = "conns"
+		goto BADINPUT
+	}
+
+	ports, ok = params[3].([]interface{})
+
+	if !ok {
+		badparam = "ports"
+		goto BADINPUT
+	}
+
+	BADINPUT:
+	if badparam != "" {
+		failure(fmt.Sprintf("Invalid parameter: %v", badparam))
+		return
+	}
+
+	scan.Host = host
+	scan.Conns = conns
+	scan.Apiport = apiport
+
+	scan.Ports = make([]int, len(ports))
+
+	for i, any := range ports {
+		port, ok := any.(int)
+
+		if !ok {
+			failure(fmt.Sprintf("Bad port: %v", any))
+			return
+		}
+
+		scan.Ports[i] = port
+	}
 
         go func() {
-        	failed, err := scan.Scanall()
+		var badports []int
+		err := scan.Launch()
+
+		if err != nil {
+			goto ERROR
+		}
+
+        	badports, err = scan.Scanall()
 
         	if err == nil {
-        		if len(failed) == 0 {
-        			update("All tested ports are free.")
-        		} else {
-        			buff := &bytes.Buffer{}
-        			buff.WriteString("Failed ports:<br/>")
-
-        			for _, p := range failed {
-        				fmt.Fprintf(buff, "%v<br/>", p)
-        			}
-
-        			update(buff.String())
-        		}
-        	} else {
-        		update("There was an error")
-        		panic(err)
+			success(badports)
+			return
         	}
-        }()
-}
 
-func update(messageHtml string) {
-	doc := js.Global.Get("document")
-	status := doc.Call("getElementById", "status")
-	status.Set("innerHTML", messageHtml)
+ERROR:
+		failure(err.Error())
+        }()
 }

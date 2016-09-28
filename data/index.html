@@ -26,8 +26,31 @@
 				conns: simConns
 			};
 
-      Webscan(opts);
+			nowScanning();
+      Webscan(opts, onSuccess, onFailure);
     }
+
+		function onSuccess(badPorts) {
+			var status = $("#status");
+			status.empty();
+			status.append($('<p class="success-header">Your blocked ports are:</p>'));
+			badPorts.forEach(function (port) {
+				status.append('<p>' + port + '</p>');
+			});
+		}
+
+		function onFailure(error) {
+			console.log(error)
+			var status = $("#status");
+			status.empty();
+			status.append($('<p class="error">' + error + '</p>'));
+		}
+
+		function nowScanning() {
+			var status = $("#status");
+			status.empty();
+			status.append($('<p class="progress">Scanning...</p>'));
+		}
 
 		function showAdvanced() {
 			$(".if-advanced").addClass("advanced");
