@@ -12,22 +12,18 @@
     function scan() {
 			var startPort = parseInt($("#advanced-start-port").val());
 			var endPort = parseInt($("#advanced-end-port").val())
-			var simConns = parseInt($("#advanced-conns").val());
+			var conns = parseInt($("#advanced-conns").val());
 
 			var ports = [];
 			for (var i = startPort; i <= endPort; i++) {
 				ports.push(i);
 			}
 
-			var opts = {
-				hostname: "{{.Hostname}}",
-				apiport: {{.Apiport}},
-				ports: ports,
-				conns: simConns
-			};
+			hostname = "{{.Hostname}}";
+			apiport = {{.Apiport}};
 
 			nowScanning();
-      Webscan(opts, onSuccess, onFailure);
+      Webscan(hostname, conns, apiport, ports, onSuccess, onFailure);
     }
 
 		function onSuccess(badPorts) {
