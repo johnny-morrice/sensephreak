@@ -1,3 +1,31 @@
 body {
-        font-family: sans;
+  font-family: sans;
+}
+
+.if-advanced {
+  display: none;
+}
+
+.if-advanced.advanced {
+  display: block;
+}
+
+.if-basic {
+  display: none;
+}
+
+.if-basic.basic {
+	display: block;
+}
+
+input {
+	display: block;
+}
+
+.if-running {
+	display: none;
+}
+
+.if-running.running {
+	display: block;
 }

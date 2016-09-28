@@ -10,18 +10,47 @@ import (
 	"sync"
 )
 
-func Scanall(hostname string, apiport int, ports []int) ([]int, error) {
-	scan, err := Launch(hostname, apiport, 50)
+type Scan struct {
+	Id      int
+	Host    string
+	Apiport int
+	Ports []int
+	Conns int
+	sem     chan struct{}
+}
+
+func (scan *Scan) Launch() error {
+	scan.sem = make(chan struct{}, scan.Conns)
+
+	url := scan.Apipath("/test", scan.Apiport)
+
+	resp, err := http.Post(url, plaintype, nilreader())
 
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "Failed to launch test")
 	}
 
+	defer resp.Body.Close()
+
+	var id int
+	dec := json.NewDecoder(resp.Body)
+	err = dec.Decode(&id)
+
+	if err != nil {
+		return errors.Wrap(err, "Failed to read id")
+	}
+
+        scan.Id = id
+
+        return nil
+}
+
+func (scan *Scan) Scanall() ([]int, error) {
 	wg := sync.WaitGroup{}
 
-	wg.Add(len(ports))
+	wg.Add(len(scan.Ports))
 
-	for _, p := range ports {
+	for _, p := range scan.Ports {
 		port := p
 		go func() {
 			scan.Ping(port)
@@ -37,42 +66,6 @@ func Scanall(hostname string, apiport int, ports []int) ([]int, error) {
 	}
 
 	return failed, nil
-}
-
-type Scan struct {
-	Id      int
-	host    string
-	apiport int
-	sem     chan struct{}
-}
-
-func Launch(hostname string, apiport, conns int) (*Scan, error) {
-	scan := &Scan{}
-	scan.host = hostname
-	scan.apiport = apiport
-	scan.sem = make(chan struct{}, conns)
-
-	url := scan.Apipath("/test", apiport)
-
-	resp, err := http.Post(url, plaintype, nilreader())
-
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to launch test")
-	}
-
-	defer resp.Body.Close()
-
-	var id int
-	dec := json.NewDecoder(resp.Body)
-	err = dec.Decode(&id)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to read id")
-	}
-
-        scan.Id = id
-
-        return scan, nil
 }
 
 func (scan *Scan) Ping(port int) error {
@@ -96,7 +89,7 @@ func (scan *Scan) Ping(port int) error {
 }
 
 func (scan *Scan) BadPorts() ([]int, error) {
-	url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), scan.apiport)
+	url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), scan.Apiport)
 
 	resp, err := http.Get(url)
 
@@ -126,7 +119,7 @@ func (scan *Scan) withlimit(f func()) {
 }
 
 func (scan *Scan) Apipath(part string, port int) string {
-	return fmt.Sprintf("http://%v:%v/api%v", scan.host, port, part)
+	return fmt.Sprintf("http://%v:%v/api%v", scan.Host, port, part)
 }
 
 func nilreader() io.Reader {

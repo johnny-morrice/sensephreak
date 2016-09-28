@@ -6,17 +6,68 @@
     <meta name="keywords" content="">
     <meta name="author" content="">
     <title>Firewall Blocked Port Scanner</title>
+		<script src="jquery-3.1.1.min.js"></script>
     <script src="script.js"></script>
     <script>
     function scan() {
-      var ports = [{{range $index, $port := .Ports }}{{if (gt $index 0)}},{{end}}{{$port}}{{end}}];
-      Webscan("{{.Hostname}}", {{.Apiport}}, ports);
+			var startPort = parseInt($("#advanced-start-port").val());
+			var endPort = parseInt($("#advanced-end-port").val())
+			var simConns = parseInt($("#advanced-conns").val());
+
+			var ports = [];
+			for (var i = startPort; i <= endPort; i++) {
+				ports.push(i);
+			}
+
+			var opts = {
+				hostname: "{{.Hostname}}",
+				apiport: {{.Apiport}},
+				ports: ports,
+				conns: simConns
+			};
+
+      Webscan(opts);
     }
+
+		function showAdvanced() {
+			$(".if-advanced").addClass("advanced");
+			$(".if-basic").removeClass("basic");
+		}
+
+		function hideAdvanced() {
+			$(".if-basic").addClass("basic");
+			$(".if-advanced").removeClass("advanced");
+		}
+
+		function reset() {
+			$("#advanced-start-port").val(1);
+			$("#advanced-end-port").val(65535);
+			$("#advanced-conns").val(50);
+		}
     </script>
     <style>{{.Css}}</style>
   </head>
-  <body onload="scan()">
+  <body>
     <h1>Firewall Blocked Port Scanner</h1>
-    <div id="status">Wait for scan to complete...</div>
+		<input type="button" value="Show advanced options" class="basic if-basic" onclick="showAdvanced()"
+		<div id="advanced">
+			<label class="if-advanced">
+				Start port
+				<input type="number" id="advanced-start-port" class="if-advanced" placeholder="Start port" value="1"/>
+			</label>
+			<label class="if-advanced">
+				End port
+				<input type="number" id="advanced-end-port" class="if-advanced" placeholder="End port" value="65535"/>
+			</label>
+			<label class="if-advanced">
+				Simultaneous connections
+				<input type="number" id="advanced-conns" class="if-advanced" placeholder="Simultaneous connections" value="50"/>
+			</label>
+			<input type="button" id="advanced-reset" class="if-advanced" value="Reset to defaults" onclick="reset()"/>
+			<input type="button" value="Hide advanced options" class="if-advanced" onclick="hideAdvanced()"/>
+		</div>
+		<input type="button" value="Scan Now" onclick="scan()"/>
+		<input type="button" value="Cancel" id="cancel-button" class="if-running"/>
+		<div id="status"></div>
   </body>
 </html>

@@ -109,6 +109,7 @@ func (ph *phreak) serveweb() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", front.index).Methods("GET")
         r.HandleFunc("/script.js", front.javascript).Methods("GET")
+	r.HandleFunc("/jquery-3.1.1.min.js", front.jquery).Methods("GET")
         r.HandleFunc("/script.js.map", front.sourcemap).Methods("GET")
 	r.HandleFunc("/api/test", api.newtest).Methods("POST")
 	r.HandleFunc("/api/test/{resultset}", api.getresults).Methods("GET")

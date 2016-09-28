@@ -26,19 +26,23 @@ func (fr *frontend) getasset(name string) string {
 	return string(template)
 }
 
-func (fr *frontend) script() string {
+func (fr *frontend) jqueryasset() string {
+	return fr.getasset("data/jquery-3.1.1.min.js")
+}
+
+func (fr *frontend) scriptasset() string {
 	return fr.getasset("data/script.js")
 }
 
-func (fr *frontend) srcmap() string {
+func (fr *frontend) srcmapasset() string {
         return fr.getasset("data/script.js.map")
 }
 
-func (fr *frontend) html() string {
+func (fr *frontend) htmlasset() string {
 	return fr.getasset("data/index.html")
 }
 
-func (fr *frontend) css() string {
+func (fr *frontend) cssasset() string {
 	return fr.getasset("data/style.css")
 }
 
@@ -47,8 +51,8 @@ func (fr *frontend) indexpage() []byte {
                 return fr.cache
         }
 
-	style := fr.css()
-	html := fr.html()
+	style := fr.cssasset()
+	html := fr.htmlasset()
 
 	type Variables struct {
 		Css        string
@@ -86,13 +90,19 @@ func (fr *frontend) index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (fr *frontend) javascript(w http.ResponseWriter, r *http.Request) {
-        js := fr.script()
+        js := fr.scriptasset()
 
         w.Write([]byte(js))
 }
 
 func (fr *frontend) sourcemap(w http.ResponseWriter, r *http.Request) {
-        m := fr.srcmap()
+        m := fr.srcmapasset()
 
         w.Write([]byte(m))
+}
+
+func (fr *frontend) jquery(w http.ResponseWriter, r *http.Request) {
+	jq := fr.jqueryasset()
+
+	w.Write([]byte(jq))
 }
