@@ -1,11 +1,13 @@
-package main
+package server
 
 import (
 	"fmt"
-	"github.com/johnny-morrice/ctrl"
 	"log"
 	"net/http"
 	"strconv"
+
+        "github.com/johnny-morrice/ctrl"
+        "github.com/gorilla/mux"
 )
 
 // testcase is a controller that runs on the given port.
@@ -13,6 +15,17 @@ type testcase struct {
 	port     int
 	set      *testset
 	commands chan<- command
+	hostname string
+}
+
+func (tcase *testcase) handler() http.Handler {
+	r := mux.NewRouter()
+	r.Handle("/api/test/{resultset}/ping", tcase)
+
+        // Use CORS to allow all origins.
+        handler := newcorshandler(r, fmt.Sprintf("http://%v", tcase.hostname))
+
+        return handler
 }
 
 func resultsetparam(c ctrl.C) (uint64, error) {

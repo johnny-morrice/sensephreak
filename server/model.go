@@ -1,4 +1,4 @@
-package main
+package server
 
 // testset is a specification of the ports that will be tested.
 type testset struct {

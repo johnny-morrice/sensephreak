@@ -1,6 +1,6 @@
 //go:generate gopherjs build -m -o data/script.js js/main.go
-//go:generate go-bindata data/
-package main
+//go:generate go-bindata --pkg server data/
+package server
 
 import (
 	"bytes"

@@ -1,17 +1,16 @@
-package main
+package server
 
 import (
 	"fmt"
 	"log"
+        "net"
 	"net/http"
 	"sync"
         "github.com/gorilla/mux"
 )
 
-func main() {
-	ports := makeportlist()
-
-	ph := mkphreak()
+func Serve(bind net.IP, hostname string, ports []int) {
+	ph := mkphreak(string(bind), hostname)
 
         tests := make([]*testcase, len(ports))
 
@@ -48,40 +47,15 @@ func main() {
 	wg.Wait()
 }
 
-func mkphreak() *phreak {
+func mkphreak(bind, hostname string) *phreak {
 	ph := &phreak{}
 	ph.commands = make(chan command)
 	ph.tests = &testset{}
-	ph.webport = webport
-	ph.bind = bindinter
+	ph.webport = Webport
+	ph.bind = bind
+        ph.hostname = hostname
 
 	return ph
-}
-
-func basicskip() map[int]struct{} {
-	skiplist := map[int]struct{}{}
-
-	for i := 1; i < sysportmax; i++ {
-		skiplist[i] = struct{}{}
-	}
-
-	return skiplist
-}
-
-func makeportlist() []int {
-	skiplist := basicskip()
-
-	ports := []int{}
-
-	for i := 1; i < portmax; i++ {
-		if _, skip := skiplist[i]; skip {
-			continue
-		}
-
-		ports = append(ports, i)
-	}
-
-	return ports
 }
 
 // phreak checks if your firewall is blocking you from seeing some ports.
@@ -91,6 +65,7 @@ type phreak struct {
 	commands chan command
 	webport  int
 	bind     string
+        hostname string
 }
 
 // serveweb runs a webserver for the main API and web interface.
@@ -104,15 +79,18 @@ func (ph *phreak) serveweb() {
 	front := &frontend{}
 	front.ports = ph.tests.activeports()
 	front.host = hostname
-	front.apiport = webport
+	front.apiport = Webport
 
+        webtest := ph.addtestcase(Webport)
 	r := mux.NewRouter()
+
 	r.HandleFunc("/", front.index).Methods("GET")
         r.HandleFunc("/script.js", front.javascript).Methods("GET")
 	r.HandleFunc("/jquery-3.1.1.min.js", front.jquery).Methods("GET")
         r.HandleFunc("/script.js.map", front.sourcemap).Methods("GET")
 	r.HandleFunc("/api/test", api.newtest).Methods("POST")
 	r.HandleFunc("/api/test/{resultset}", api.getresults).Methods("GET")
+        r.Handle("/api/test/{resultset}/ping", webtest)
 
 	srv.Handler = r
 
@@ -124,13 +102,7 @@ func (ph *phreak) servetest(tcase *testcase) {
 	srv := &http.Server{}
 	srv.Addr = fmt.Sprintf("%v:%v", ph.bind, tcase.port)
 
-	r := mux.NewRouter()
-	r.Handle("/api/test/{resultset}/ping", tcase)
-
-        // Use CORS to allow all origins.
-        handler := newcorshandler(r, fmt.Sprintf("http://%v", hostname))
-
-	srv.Handler = handler
+	srv.Handler = tcase.handler()
 
 	srv.ListenAndServe()
 }
@@ -142,6 +114,7 @@ func (ph *phreak) addtestcase(port int) *testcase {
 	tcase.port = port
 	tcase.set = ph.tests
 	tcase.commands = ph.commands
+        tcase.hostname = ph.hostname
 
 	ph.tests.cases = append(ph.tests.cases, tcase)
 
@@ -246,9 +219,5 @@ type result struct {
 	done chan struct{}
 }
 
-const webport = 80
+const Webport = 80
 const hostname = "172.17.0.2"
-const bindinter = "0.0.0.0"
-// TODO configurable port options, so we can turn sysportmax back to 1000.
-const sysportmax = 0
-const portmax = 65536
