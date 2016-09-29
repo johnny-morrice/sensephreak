@@ -44,7 +44,7 @@ $ sensephreak serve --bind 0.0.0.0
 
 # Use docker to listen on all ports in containerized application (in root of source code):
 $ docker build -t sensephreak .
-$ docker run --name test --rm sensephreak serve --bind 0.0.0.0`,
+$ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.0.0.0`,
 	Run: func(cmd *cobra.Command, args []string) {
                 var bind net.IP
                 var hostname string
