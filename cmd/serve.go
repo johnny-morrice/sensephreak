@@ -36,7 +36,7 @@ var serveCmd = &cobra.Command{
 through docker:
 
 # Default runs on localhost for safety (although this is unlikely to be useful
-# in production.
+# in production.)
 $ sensephreak serve
 
 # Listen on all ports.

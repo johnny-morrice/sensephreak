@@ -7,7 +7,7 @@ It should be considered beta software at this stage.
 Examples:
 
         # Default runs on localhost for safety (although this is unlikely to be useful
-        # in production.
+        # in production.)
         $ sensephreak serve
 
         # Listen on all ports.
