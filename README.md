@@ -1,10 +1,15 @@
 # Sensesphreak: single-exe firewall block checker
 
-Sensephreak is a single-exe firewall block checker.
+Sensephreak is a single-exe firewall block checker for the web.
 
 It should be considered beta software at this stage.
 
-Examples:
+After running an example server command, visit the server in your browser.
+
+By default, sensephreak runs on all available ports, so it's best to run it as
+a dockerized application.
+
+## Examples:
 
         # Default runs on localhost for safety (although this is unlikely to be useful
         # in production.)
@@ -20,6 +25,6 @@ Examples:
         # Command line scanner
         $ sensephreak scan --remote yoursite.com
 
-Credits
+## Credits
 
 John Morrice [github](https://github.com/johnny-morrice/) [homepage](http://jmorrice.teoma.io)
