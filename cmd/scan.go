@@ -60,14 +60,19 @@ $ sensephreak scan --remote yoursite.com
 
 		err = scan.Launch()
 
-                badports, err = scan.Scanall()
-
                 if err != nil {
-                        fmt.Fprintf(os.Stderr, "Error: %v", err)
+                        goto ERROR
                 }
+
+                badports, err = scan.Scanall()
 
                 for _, p := range badports {
                         fmt.Printf("%v\n", p)
+                }
+
+ERROR:
+                if err != nil {
+                        fmt.Fprintf(os.Stderr, "Error: %v", err)
                 }
 	},
 }
