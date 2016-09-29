@@ -34,8 +34,8 @@ var cfgFile string
 var RootCmd = &cobra.Command{
 	Use:   "sensephreak",
 	Short: "Check if your firewall is blocking ports",
-	Long: `Sensephreak is a single-exe web app to check if your
-	firewall is blocking ports:
+	Long: `Sensephreak is a single-exe web app to check if your firewall is
+blocking ports:
 
 # Run the server.
 $ sensephreak serve --bind 0.0.0.0

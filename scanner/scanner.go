@@ -20,6 +20,10 @@ type Scan struct {
 }
 
 func (scan *Scan) Launch() error {
+        if scan.Conns == 0 {
+                scan.Conns = 50
+        }
+
 	scan.sem = make(chan struct{}, scan.Conns)
 
 	url := scan.Apipath("/test", scan.Apiport)

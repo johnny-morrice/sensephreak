@@ -34,9 +34,9 @@ var scanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Command line utility to check blocked ports",
 	Long: `Command line utility that scans against a sensephreak server
-        instance:
+instance:
 
-# Scan against remote sensephreak instance (assuming your firewall
+# Scan against remote sensephreak instance (assuming your firewall blocks
 # outgoing connections to ports 1, 25, and 81)
 $ sensephreak scan --remote yoursite.com
 1
@@ -53,7 +53,14 @@ $ sensephreak scan --remote yoursite.com
                         panic(err)
                 }
 
-                badports, err = scanner.Scanall(remote, server.Webport, defaultports)
+		scan := scanner.Scan{}
+                scan.Host = remote
+                scan.Apiport = server.Webport
+                scan.Ports = defaultports
+
+		err = scan.Launch()
+
+                badports, err = scan.Scanall()
 
                 if err != nil {
                         fmt.Fprintf(os.Stderr, "Error: %v", err)
