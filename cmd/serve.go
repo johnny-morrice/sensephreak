@@ -30,21 +30,21 @@ import (
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "Run a sensephreak server instead.",
+	Short: "Run a sensephreak server instance.",
 	Long: `Run a sensephreak server.  The server typically runs on a range of
-	(or all available) ports.  For this reason, it is easiest to run
-	sensphreak through docker:
+(or all available) ports.  For this reason, it is easiest to run sensphreak
+through docker:
 
 # Default runs on localhost for safety (although this is unlikely to be useful
 # in production.
-$ sensephreak.
+$ sensephreak serve
 
 # Listen on all ports.
-$ sensephreak --bind 0.0.0.0
+$ sensephreak serve --bind 0.0.0.0
 
 # Use docker to listen on all ports in containerized application (in root of source code):
 $ docker build -t sensephreak .
-$ docker run --name test --rm sensephreak`,
+$ docker run --name test --rm sensephreak serve --bind 0.0.0.0`,
 	Run: func(cmd *cobra.Command, args []string) {
                 var bind net.IP
                 var hostname string
@@ -72,7 +72,7 @@ func init() {
 	RootCmd.AddCommand(serveCmd)
 
 	persistent := serveCmd.PersistentFlags()
-	persistent.IP("bind", net.IP("127.0.0.1"), "Interface on which to listen")
+	persistent.IP("bind", net.IP([]byte{127, 0, 0, 1}), "Interface on which to listen")
         persistent.String("hostname", "localhost", "External hostname (Mandatory for CORS)")
 
         // Generate the ports at this point, even though these are

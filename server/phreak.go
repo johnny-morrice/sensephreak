@@ -6,11 +6,12 @@ import (
         "net"
 	"net/http"
 	"sync"
+        "os"
         "github.com/gorilla/mux"
 )
 
 func Serve(bind net.IP, hostname string, ports []int) {
-	ph := mkphreak(string(bind), hostname)
+	ph := mkphreak(bind.String(), hostname)
 
         tests := make([]*testcase, len(ports))
 
@@ -78,7 +79,7 @@ func (ph *phreak) serveweb() {
 
 	front := &frontend{}
 	front.ports = ph.tests.activeports()
-	front.host = hostname
+	front.host = ph.hostname
 	front.apiport = Webport
 
         webtest := ph.addtestcase(Webport)
@@ -94,7 +95,13 @@ func (ph *phreak) serveweb() {
 
 	srv.Handler = r
 
-	srv.ListenAndServe()
+        if debug {
+                loglisten(srv)
+        }
+
+	err := srv.ListenAndServe()
+
+        fmt.Fprintf(os.Stderr, "%v\n", err)
 }
 
 // servetest runs a webserver on the given port for the /ping API call.
@@ -102,9 +109,15 @@ func (ph *phreak) servetest(tcase *testcase) {
 	srv := &http.Server{}
 	srv.Addr = fmt.Sprintf("%v:%v", ph.bind, tcase.port)
 
+        if debug {
+                loglisten(srv)
+        }
+
 	srv.Handler = tcase.handler()
 
-	srv.ListenAndServe()
+	err := srv.ListenAndServe()
+
+        fmt.Fprintf(os.Stderr, "%v\n", err)
 }
 
 // addtestcase adds a new test case to the set for the given port, and returns
@@ -219,5 +232,9 @@ type result struct {
 	done chan struct{}
 }
 
+func loglisten(srv *http.Server) {
+        fmt.Fprintf(os.Stderr, "Serving on: %v\n", srv.Addr)
+}
+
 const Webport = 80
-const hostname = "172.17.0.2"
+const debug = false
