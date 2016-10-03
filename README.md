@@ -6,8 +6,7 @@ It should be considered beta software at this stage.
 
 After running an example server command, visit the server in your browser.
 
-By default, sensephreak runs on all available ports, so it's best to run it as
-a dockerized application.
+sensephreak runs on all available ports, so it's best to run it as a dockerized application.
 
 ## Examples:
 
