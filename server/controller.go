@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -141,8 +142,21 @@ ERROR:
 func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 	c := ctrl.New(w, r)
 
+	packet := &LaunchData{}
+	dec := json.NewDecoder(r.Body)
+	err := dec.Decode(packet)
+
+	if err != nil {
+		log.Printf("Error decoding newtest request body: %v", err)
+
+		c.InternalError()
+
+		return
+	}
+
 	reg := registration{}
 	reg.newid = make(chan int)
+	reg.LaunchData = *packet
 
 	cmd := command{}
 	cmd.ctype = _NEWTEST
@@ -152,10 +166,10 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 
 	id := <-reg.newid
 
-	err := c.ServeJson(id)
+	err = c.ServeJson(id)
 
 	if err != nil {
-		log.Printf("Error in newtest: %v", err)
+		log.Printf("Error serving newtest: %v", err)
 
 		c.InternalError()
 	}

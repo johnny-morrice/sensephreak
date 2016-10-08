@@ -4,22 +4,25 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"sync"
+
+	"github.com/pkg/errors"
+	"github.com/johnny-morrice/sensephreak/server"
 )
 
 type Scan struct {
 	Id      int
 	Host    string
 	Apiport int
-	Ports []int
+	StartPort int
+	EndPort int
 	Conns int
 	sem     chan struct{}
 }
 
-func GoodPorts(start, end int, badports []int) []int {
+func (scan *Scan) GoodPorts(badports []int) []int {
 	badmap := make(map[int]struct{})
 	var goodports []int
 
@@ -27,7 +30,7 @@ func GoodPorts(start, end int, badports []int) []int {
 		badmap[bad] = struct{}{}
 	}
 
-	for p := start; p <= end; p++ {
+	for p := scan.StartPort; p <= scan.EndPort; p++ {
 		if _, bad := badmap[p]; !bad {
 			goodports = append(goodports, p)
 		}
@@ -38,14 +41,28 @@ func GoodPorts(start, end int, badports []int) []int {
 
 func (scan *Scan) Launch() error {
         if scan.Conns == 0 {
-                scan.Conns = 50
+                scan.Conns = DefaultConns
         }
 
 	scan.sem = make(chan struct{}, scan.Conns)
 
 	url := scan.Apipath("/test", scan.Apiport)
 
-	resp, err := http.Post(url, plaintype, nilreader())
+	packet := server.LaunchData{}
+	packet.StartPort = scan.StartPort
+	packet.EndPort = scan.EndPort
+
+	buff := &bytes.Buffer{}
+	enc := json.NewEncoder(buff)
+
+	err := enc.Encode(packet)
+
+	if err != nil {
+		return errors.Wrap(err, "Failed to encode LaunchData")
+	}
+
+	var resp *http.Response
+	resp, err = http.Post(url, plaintype, buff)
 
 	if err != nil {
 		return errors.Wrap(err, "Failed to launch test")
@@ -69,9 +86,8 @@ func (scan *Scan) Launch() error {
 func (scan *Scan) Scanall() ([]int, error) {
 	wg := sync.WaitGroup{}
 
-	wg.Add(len(scan.Ports))
 
-	for _, p := range scan.Ports {
+	for p := scan.StartPort; p <= scan.EndPort; p++ {
 		port := p
 		go func() {
 			scan.Ping(port)
@@ -148,3 +164,4 @@ func nilreader() io.Reader {
 }
 
 const plaintype = "text/plain"
+const DefaultConns = 50

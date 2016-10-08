@@ -10,7 +10,6 @@ import (
 )
 
 type frontend struct {
-	ports   []int
 	host    string
 	apiport int
         cache []byte
@@ -54,16 +53,12 @@ func (fr *frontend) indexpage() []byte {
 	style := fr.cssasset()
 	html := fr.htmlasset()
 
-	type Variables struct {
+	variables := struct {
 		Css        string
-		Ports      []int
 		Hostname   string
 		Apiport    int
-	}
-
-	variables := Variables{
+	}{
 		Css:        style,
-		Ports:      fr.ports,
 		Apiport:    fr.apiport,
 		Hostname:   fr.host,
 	}

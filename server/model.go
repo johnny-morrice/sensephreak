@@ -6,26 +6,11 @@ type testset struct {
 	portcache []int
 }
 
-// activeports returns the ports that will be tested.
-func (tset *testset) activeports() []int {
-	if tset.portcache != nil {
-		return tset.portcache
-	}
-
-	ports := []int{}
-
-	for _, tc := range tset.cases {
-		ports = append(ports, tc.port)
-	}
-
-	tset.portcache = ports
-
-	return ports
-}
-
 // resultset represents a running or completed test.
 type resultset struct {
 	tests   *testset
+	startport int
+	endport int
 	passing []int
 }
 
@@ -36,8 +21,6 @@ func (rset *resultset) success(port int) {
 
 // failports returns the ports that fail the test.
 func (rset *resultset) failports() []int {
-	active := rset.tests.activeports()
-
 	good := map[int]struct{}{}
 
 	for _, port := range rset.passing {
@@ -46,7 +29,7 @@ func (rset *resultset) failports() []int {
 
 	bad := []int{}
 
-	for _, port := range active {
+	for port := rset.startport; port <= rset.endport; port++ {
 		if _, ok := good[port]; ok {
 			continue
 		}

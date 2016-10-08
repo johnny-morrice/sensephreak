@@ -81,7 +81,7 @@ func init() {
         // The main web port is a special case.
         skip[server.Webport] = struct{}{}
 
-        for i := 1; i < portmax; i++ {
+        for i := portmin; i < portmax; i++ {
                 if _, skipped := skip[i]; skipped {
                         continue
                 }
@@ -93,3 +93,4 @@ func init() {
 
 
 const portmax = 65536
+const portmin = 1

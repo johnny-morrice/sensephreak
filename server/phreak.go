@@ -78,7 +78,6 @@ func (ph *phreak) serveweb() {
 	api.commands = ph.commands
 
 	front := &frontend{}
-	front.ports = ph.tests.activeports()
 	front.host = ph.hostname
 	front.apiport = Webport
 
@@ -222,7 +221,14 @@ type query struct {
 	failports chan []int
 }
 
+type LaunchData struct {
+	StartPort int
+	EndPort int
+}
+
 type registration struct {
+	LaunchData
+
 	newid chan int
 }
 

@@ -22,14 +22,23 @@
 			hostname = "{{.Hostname}}";
 			apiport = {{.Apiport}};
 
+      scan = ScanBuilder();
+      scan.SetHostname(hostname);
+      scan.SetApiport(apiport);
+      scan.SetStartPort(startPort);
+      scan.SetEndPort(endPort);
+      scan.SetConns(conns);
+			scan.SetOnSuccess(onSuccess);
+			scan.SetOnError(onError);
+
 			emptyPortList();
 			hideIfScanned();
 			showRunning();
 
-      Webscan(hostname, conns, apiport, ports, onSuccess, onFailure);
+			scan.WebScan();
     }
 
-		function onSuccess(badPorts) {
+		function onSuccess(badports, goodports) {
       var badStatus = $("#badStatus");
       var goodStatus = $("#goodStatus")
 			var statuses = [goodStatus, badStatus];
@@ -37,7 +46,7 @@
 			var startPort = parseInt($("#advanced-start-port").val());
 			var endPort = parseInt($("#advanced-end-port").val())
 
-      var ports = [GoodPorts(startPort, endPort, badPorts), badPorts]
+      var ports = [goodports, badports]
 
 			restoreInterface();
 			showIfScanned();

@@ -6,34 +6,70 @@ import (
 )
 
 func main() {
-	js.Global.Set("Webscan", Webscan)
-	js.Global.Set("GoodPorts", scanner.GoodPorts)
+	js.Global.Set("ScanBuilder", ScanBuilder)
 }
 
-func Webscan(hostname string, conns, apiport int, ports []int, success func(badports []int), failure func(err string)) {
-	scan := &scanner.Scan{}
+type ScanOpts struct {
+	*js.Object
 
-	scan.Host = hostname
-	scan.Apiport = apiport
-	scan.Ports = ports
-	scan.Conns = conns
+	scanner.Scan
 
+	OnSuccess func(goodports, badports []int)
+	OnError func(err string)
+}
+
+func ScanBuilder() *ScanOpts {
+	return &ScanOpts{}
+}
+
+func (so *ScanOpts) SetHostname(hostname string) {
+	so.Host = hostname
+}
+
+func (so *ScanOpts) SetConns(conns int) {
+	so.Conns = conns
+}
+
+func (so *ScanOpts) SetApiport(apiport int) {
+	so.Apiport = apiport
+}
+
+func (so *ScanOpts) SetStartPort(startPort int) {
+	so.StartPort = startPort
+}
+
+func (so *ScanOpts) SetEndPort(endPort int) {
+	so.EndPort = endPort
+}
+
+func (so *ScanOpts) SetOnSuccess(onSuccess func(goodports, badports []int)) {
+	so.OnSuccess = onSuccess
+}
+
+func (so *ScanOpts) SetOnError(onError func(err string)) {
+	so.OnError = onError
+}
+
+func (so *ScanOpts) WebScan() {
         go func() {
 		var badports []int
-		err := scan.Launch()
+		err := so.Launch()
 
 		if err != nil {
 			goto ERROR
 		}
 
-        	badports, err = scan.Scanall()
+        	badports, err = so.Scanall()
 
         	if err == nil {
-			success(badports)
+			goodports := so.GoodPorts(badports)
+
+			so.OnSuccess(goodports, badports)
+
 			return
         	}
 
 ERROR:
-		failure(err.Error())
+		so.OnError(err.Error())
         }()
 }
