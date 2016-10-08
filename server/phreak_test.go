@@ -5,12 +5,12 @@ import (
 )
 
 func Test_launch(t *testing.T) {
-	ph := mkphreak()
+	ph := testphreak()
 
 	expectA := 0
 	expectB := 1
 
-	reg := &registration{}
+	reg := registration{}
 	reg.newid = make(chan int)
 
 	go ph.launch(reg)
@@ -30,16 +30,16 @@ func Test_launch(t *testing.T) {
 	}
 }
 func Test_ping(t *testing.T) {
-	ph := mkphreak()
+	ph := testphreak()
 
-	reg := &registration{}
+	reg := registration{}
 	reg.newid = make(chan int)
 
 	go ph.launch(reg)
 
 	rset := <-reg.newid
 
-	res := &result{}
+	res := result{}
 	res.port = 80
 	res.set = uint64(rset)
 	res.done = make(chan struct{})
@@ -49,16 +49,16 @@ func Test_ping(t *testing.T) {
 	<-res.done
 }
 func Test_badports(t *testing.T) {
-	ph := mkphreak()
+	ph := testphreak()
 
-	reg := &registration{}
+	reg := registration{}
 	reg.newid = make(chan int)
 
 	go ph.launch(reg)
 
 	rset := <-reg.newid
 
-	res := &result{}
+	res := result{}
 	res.port = 80
 	res.set = uint64(rset)
 	res.done = make(chan struct{})
@@ -67,7 +67,7 @@ func Test_badports(t *testing.T) {
 
 	<-res.done
 
-	q := &query{}
+	q := query{}
 	q.rset = uint64(rset)
 	q.failports = make(chan []int)
 
@@ -84,4 +84,8 @@ func Test_badports(t *testing.T) {
 			t.Error("Expected %v but received %v", exp, acp)
 		}
 	}
+}
+
+func testphreak() *phreak {
+	return mkphreak("127.0.0.1", "localhost", 80)
 }

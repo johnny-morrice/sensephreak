@@ -159,6 +159,8 @@ func (ph *phreak) mainloop() {
 func (ph *phreak) launch(r registration) {
 	rset := &resultset{}
 	rset.tests = ph.tests
+	rset.startport = r.StartPort
+	rset.endport = r.EndPort
 
 	id := len(ph.rsets)
 	ph.rsets = append(ph.rsets, rset)

@@ -3,7 +3,18 @@ package server
 // testset is a specification of the ports that will be tested.
 type testset struct {
 	cases     []*testcase
-	portcache []int
+	portcache map[int]struct{}
+}
+
+func (tset *testset) activeports() map[int]struct{} {
+	if tset.portcache == nil {
+		tset.portcache = make(map[int]struct{})
+		for _, tc := range tset.cases {
+			tset.portcache[tc.port] = struct{}{}
+		}
+	}
+
+	return tset.portcache
 }
 
 // resultset represents a running or completed test.
@@ -30,7 +41,11 @@ func (rset *resultset) failports() []int {
 	bad := []int{}
 
 	for port := rset.startport; port <= rset.endport; port++ {
-		if _, ok := good[port]; ok {
+		if _, exempt := good[port]; exempt {
+			continue
+		}
+
+		if _, present := rset.tests.portcache[port]; !present {
 			continue
 		}
 
