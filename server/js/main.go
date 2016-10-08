@@ -7,6 +7,7 @@ import (
 
 func main() {
 	js.Global.Set("Webscan", Webscan)
+	js.Global.Set("GoodPorts", scanner.GoodPorts)
 }
 
 func Webscan(hostname string, conns, apiport int, ports []int, success func(badports []int), failure func(err string)) {

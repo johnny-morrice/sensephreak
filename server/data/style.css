@@ -1,31 +1,36 @@
 body {
-  font-family: sans;
+  font-family: "Lucida Console", Monaco, monospace;
+	text-align: center;
 }
 
-.if-advanced {
-  display: none;
-}
-
-.if-advanced.advanced {
-  display: block;
-}
-
-.if-basic {
-  display: none;
-}
-
-.if-basic.basic {
-	display: block;
+h1 {
+	font-family: Impact, Charcoal, sans-serif;
 }
 
 input {
 	display: block;
+	border-radius: 0.5em;
+	font-family: "Lucida Console", Monaco, monospace;
+	font-size: medium;
+	min-width: 300px;
+	width: 50%;
+	margin-top: 0.25em;
+	margin-bottom: 0.25em;
+	margin-left: auto;
+	margin-right: auto;
 }
 
-.if-running {
+.start-hidden {
 	display: none;
 }
 
-.if-running.running {
-	display: block;
+#content {
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+#download-link {
+	margin-top: 2em;
+	margin-bottom: 2em;
 }

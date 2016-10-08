@@ -44,10 +44,14 @@ $ sensephreak scan --remote yoursite.com
 81`,
 	Run: func(cmd *cobra.Command, args []string) {
                 var remote string
-                var badports []int
+		var good bool
+                var listports []int
                 var err error
 
-		remote, err = cmd.PersistentFlags().GetString("remote")
+		persistent := cmd.PersistentFlags()
+
+		remote, err = persistent.GetString("remote")
+		good, err = persistent.GetBool("good")
 
                 if err != nil {
                         panic(err)
@@ -64,12 +68,17 @@ $ sensephreak scan --remote yoursite.com
                         goto ERROR
                 }
 
-                badports, err = scan.Scanall()
+                listports, err = scan.Scanall()
 
-                for _, p := range badports {
-                        fmt.Printf("%v\n", p)
-                }
+		if good {
+			const start = 1
+			const end = 65535
+			listports = scanner.GoodPorts(start, end, listports)
+		}
 
+		for _, p := range listports {
+			fmt.Printf("%v\n", p)
+		}
 ERROR:
                 if err != nil {
                         fmt.Fprintf(os.Stderr, "Error: %v", err)
@@ -80,5 +89,9 @@ ERROR:
 func init() {
 	RootCmd.AddCommand(scanCmd)
 
-	scanCmd.PersistentFlags().String("remote", "localhost", "Remote host against which to scan")
+	persistent := scanCmd.PersistentFlags()
+
+	persistent.String("remote", "localhost", "Remote host against which to scan")
+	persistent.Bool("good", false, "List ports that do connect, rather than those that do not")
+
 }

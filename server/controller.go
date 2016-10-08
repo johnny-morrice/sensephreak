@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
         "github.com/johnny-morrice/ctrl"
@@ -94,6 +95,10 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
 	cmd := command{}
 	var badports []int
 	var ok bool
+
+	if debug {
+		fmt.Fprintln(os.Stderr, "getresults")
+	}
 
 	c := ctrl.New(w, r)
 

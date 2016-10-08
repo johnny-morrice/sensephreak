@@ -5,7 +5,7 @@
     <meta name="description" content="">
     <meta name="keywords" content="">
     <meta name="author" content="">
-    <title>Firewall Blocked Port Scanner</title>
+    <title>Sensephreak Blocked Port Detector</title>
 		<script src="jquery-3.1.1.min.js"></script>
     <script src="script.js"></script>
     <script>
@@ -22,40 +22,100 @@
 			hostname = "{{.Hostname}}";
 			apiport = {{.Apiport}};
 
-			nowScanning();
+			emptyPortList();
+			hideIfScanned();
+			showRunning();
+
       Webscan(hostname, conns, apiport, ports, onSuccess, onFailure);
     }
 
 		function onSuccess(badPorts) {
-			var status = $("#status");
-			status.empty();
-			status.append($('<p class="success-header">Your blocked ports are:</p>'));
-			badPorts.forEach(function (port) {
-				status.append('<p>' + port + '</p>');
-			});
+      var badStatus = $("#badStatus");
+      var goodStatus = $("#goodStatus")
+			var statuses = [goodStatus, badStatus];
+
+			var startPort = parseInt($("#advanced-start-port").val());
+			var endPort = parseInt($("#advanced-end-port").val())
+
+      var ports = [GoodPorts(startPort, endPort, badPorts), badPorts]
+
+			restoreInterface();
+			showIfScanned();
+
+      goodStatus.append($('<p class="success-header">Your unblocked ports are:</p>'));
+			badStatus.append($('<p class="success-header">Your blocked ports are:</p>'));
+
+      statuses.forEach(function (status, i) {
+  			ports[i].forEach(function (port) {
+  				status.append('<p>' + port + '</p>');
+  			});
+      });
+
+			badStatus.fadeIn();
 		}
 
 		function onFailure(error) {
 			console.log(error)
 			var status = $("#status");
-			status.empty();
+
+			showNotRunning()
+
 			status.append($('<p class="error">' + error + '</p>'));
 		}
 
-		function nowScanning() {
-			var status = $("#status");
-			status.empty();
-			status.append($('<p class="progress">Scanning...</p>'));
+		function emptyPortList() {
+			var statuses = [$("#goodStatus"), $("#badStatus")];
+			statuses.forEach(function (status) {
+				status.fadeOut();
+				status.empty();
+			})
 		}
 
 		function showAdvanced() {
-			$(".if-advanced").addClass("advanced");
-			$(".if-basic").removeClass("basic");
+			$(".if-advanced").removeClass("start-hidden");
+
+			$(".if-advanced").fadeIn();
+			$(".if-basic").fadeOut()
 		}
 
 		function hideAdvanced() {
-			$(".if-basic").addClass("basic");
-			$(".if-advanced").removeClass("advanced");
+			$(".if-basic").fadeIn();
+			$(".if-advanced").fadeOut();
+		}
+
+		function showBad() {
+			$("#badStatus").fadeIn()
+			$("#goodStatus").fadeOut()
+		}
+
+		function showGood() {
+			$("#goodStatus").removeClass("start-hidden");
+
+			$("#goodStatus").fadeIn()
+			$("#badStatus").fadeOut()
+		}
+
+		function showRunning() {
+			$(".if-running").removeClass("start-hidden");
+
+			$(".if-running").fadeIn()
+			$(".if-not-running").fadeOut()
+		}
+
+		function restoreInterface() {
+			$(".if-not-running.primary").fadeIn()
+
+			$(".if-running").fadeOut()
+		}
+
+		function showIfScanned() {
+			$(".if-scanned").removeClass("start-hidden");
+
+			$(".if-scanned").fadeIn();
+		}
+
+		function hideIfScanned() {
+			$(".if-scanned").fadeOut();
 		}
 
 		function reset() {
@@ -67,26 +127,35 @@
     <style>{{.Css}}</style>
   </head>
   <body>
-    <h1>Firewall Blocked Port Scanner</h1>
-		<input type="button" value="Show advanced options" class="basic if-basic" onclick="showAdvanced()"
-		<div id="advanced">
-			<label class="if-advanced">
-				Start port
-				<input type="number" id="advanced-start-port" class="if-advanced" placeholder="Start port" value="1"/>
-			</label>
-			<label class="if-advanced">
-				End port
-				<input type="number" id="advanced-end-port" class="if-advanced" placeholder="End port" value="65535"/>
-			</label>
-			<label class="if-advanced">
-				Simultaneous connections
-				<input type="number" id="advanced-conns" class="if-advanced" placeholder="Simultaneous connections" value="50"/>
-			</label>
-			<input type="button" id="advanced-reset" class="if-advanced" value="Reset to defaults" onclick="reset()"/>
-			<input type="button" value="Hide advanced options" class="if-advanced" onclick="hideAdvanced()"/>
+		<div id="content">
+	    <h1>Sensephreak: Single-Exe Blocked Port Detector</h1>
+			<p id="download-link"><a href="http://github.com/johnny-morrice/sensephreak">Download single-exe server/scanner &amp; sourcecode.</a></p>
+			<input type="button" value="Scan Now" class="primary if-not-running" onclick="scan()"/>
+			<input type="button" value="Show advanced options" class="primary if-not-running if-basic" onclick="showAdvanced()"
+			<div id="advanced">
+				<input type="button" value="Hide advanced options" class="if-not-running start-hidden if-advanced" onclick="hideAdvanced()"/>
+				<label class="if-not-running start-hidden if-advanced">
+					Start port
+					<input type="number" id="advanced-start-port" class="if-not-running start-hidden if-advanced" placeholder="Start port" value="1"/>
+				</label>
+				<label class="if-not-running start-hidden if-advanced">
+					End port
+					<input type="number" id="advanced-end-port" class="if-not-running start-hidden if-advanced" placeholder="End port" value="65535"/>
+				</label>
+				<label class="if-not-running start-hidden if-advanced">
+					Simultaneous connections
+					<input type="number" id="advanced-conns" class="if-not-running start-hidden if-advanced" placeholder="Simultaneous connections" value="50"/>
+				</label>
+				<input type="button" id="advanced-reset" class="if-not-running start-hidden if-advanced" value="Reset to defaults" onclick="reset()"/>
+			</div>
+			<input type="button" class="start-hidden if-running" value="Cancel" onclick="location.reload()" />
+			<input type="button" class="start-hidden if-scanned" value="Show unblocked ports" onclick="showGood()"/>
+			<input type="button" class="start-hidden if-scanned" value="Show blocked ports" onclick="showBad()"/>
+			<div id="status">
+				<div id="progress" class="start-hidden if-running">Scanning...</div>
+				<div id="badStatus"></div>
+		    <div id="goodStatus" class="start-hidden"></div>
+			</div>
 		</div>
-		<input type="button" value="Scan Now" onclick="scan()"/>
-		<input type="button" value="Cancel" id="cancel-button" class="if-running"/>
-		<div id="status"></div>
   </body>
 </html>

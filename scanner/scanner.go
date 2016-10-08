@@ -19,6 +19,23 @@ type Scan struct {
 	sem     chan struct{}
 }
 
+func GoodPorts(start, end int, badports []int) []int {
+	badmap := make(map[int]struct{})
+	var goodports []int
+
+	for _, bad := range badports {
+		badmap[bad] = struct{}{}
+	}
+
+	for p := start; p <= end; p++ {
+		if _, bad := badmap[p]; !bad {
+			goodports = append(goodports, p)
+		}
+	}
+
+	return goodports
+}
+
 func (scan *Scan) Launch() error {
         if scan.Conns == 0 {
                 scan.Conns = 50

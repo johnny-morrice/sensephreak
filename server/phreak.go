@@ -95,7 +95,7 @@ func (ph *phreak) serveweb() {
 
 	srv.Handler = r
 
-        if debug {
+        if trace {
                 loglisten(srv)
         }
 
@@ -109,7 +109,7 @@ func (ph *phreak) servetest(tcase *testcase) {
 	srv := &http.Server{}
 	srv.Addr = fmt.Sprintf("%v:%v", ph.bind, tcase.port)
 
-        if debug {
+        if trace {
                 loglisten(srv)
         }
 
@@ -237,4 +237,5 @@ func loglisten(srv *http.Server) {
 }
 
 const Webport = 80
-const debug = false
+const debug = true
+const trace = false
