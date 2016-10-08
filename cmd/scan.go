@@ -104,9 +104,11 @@ $ sensephreak scan --remote yoursite.com
 
                 listports, err = scan.Scanall()
 
+		if err != nil {
+			goto ERROR
+		}
+
 		if good {
-			const start = 1
-			const end = 65535
 			listports = scan.GoodPorts(listports)
 		}
 

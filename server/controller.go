@@ -201,7 +201,12 @@ func (ch corshandler) cors(w http.ResponseWriter, req *http.Request) {
 	if len(originheads) == 1 {
 		origin = originheads[0]
 	} else {
-                log.Printf("Bad Origin header: %v", originheads)
+		if trace {
+                	log.Printf("Bad Origin header: %v", originheads)
+
+		}
+
+		return
         }
 
         _, any := ch.allowed["*"];
@@ -215,6 +220,7 @@ func (ch corshandler) cors(w http.ResponseWriter, req *http.Request) {
 
 func (ch corshandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ch.cors(w, req)
+
 	if req.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 	} else {

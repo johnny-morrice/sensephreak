@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -88,11 +89,15 @@ func (scan *Scan) Scanall() ([]int, error) {
 
 	for p := scan.StartPort; p <= scan.EndPort; p++ {
 		wg.Add(1)
-		port := p
-		go func() {
-			scan.Ping(port)
+		go func(port int) {
+			err := scan.Ping(port)
+
+			if trace && err != nil {
+				fmt.Fprintf(os.Stderr, "error pinging port %v: %v\n", port, err)
+			}
+
 			wg.Done()
-		}()
+		}(p)
 	}
 	wg.Wait()
 
@@ -165,3 +170,4 @@ func nilreader() io.Reader {
 
 const plaintype = "text/plain"
 const DefaultConns = 50
+const trace = true

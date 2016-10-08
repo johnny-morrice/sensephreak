@@ -83,7 +83,7 @@ ERROR:
 		// The main web port is a special case.
 		skip[int(webport)] = struct{}{}
 
-		for i := portmin; i < portmax; i++ {
+		for i := portmin; i <= portmax; i++ {
 			if _, skipped := skip[i]; skipped {
 				continue
 			}
@@ -104,5 +104,5 @@ func init() {
 	persistent.Uint("webport", 80, "Web port")
 }
 
-const portmax = 65536
+const portmax = 65535
 const portmin = 1
