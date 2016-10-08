@@ -22,14 +22,14 @@
 			hostname = "{{.Hostname}}";
 			apiport = {{.Apiport}};
 
-      scan = ScanBuilder();
+      var scan = ScanBuilder();
       scan.SetHostname(hostname);
       scan.SetApiport(apiport);
       scan.SetStartPort(startPort);
       scan.SetEndPort(endPort);
       scan.SetConns(conns);
 			scan.SetOnSuccess(onSuccess);
-			scan.SetOnError(onError);
+			scan.SetOnError(onFailure);
 
 			emptyPortList();
 			hideIfScanned();

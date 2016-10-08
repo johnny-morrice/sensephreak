@@ -18,8 +18,8 @@ type ScanOpts struct {
 	OnError func(err string)
 }
 
-func ScanBuilder() *ScanOpts {
-	return &ScanOpts{}
+func ScanBuilder() *js.Object {
+	return js.MakeWrapper(&ScanOpts{})
 }
 
 func (so *ScanOpts) SetHostname(hostname string) {

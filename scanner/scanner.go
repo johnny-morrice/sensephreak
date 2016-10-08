@@ -86,8 +86,8 @@ func (scan *Scan) Launch() error {
 func (scan *Scan) Scanall() ([]int, error) {
 	wg := sync.WaitGroup{}
 
-
 	for p := scan.StartPort; p <= scan.EndPort; p++ {
+		wg.Add(1)
 		port := p
 		go func() {
 			scan.Ping(port)
