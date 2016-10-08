@@ -50,15 +50,40 @@ $ sensephreak scan --remote yoursite.com
 		var webport uint
                 var listports []int
                 var err error
-		var scan *scanner.Scan
+		scan := &scanner.Scan{}
 
 		persistent := cmd.PersistentFlags()
 
 		remote, err = persistent.GetString("remote")
+
+		if err != nil {
+			goto ERROR
+		}
+
 		good, err = persistent.GetBool("good")
+
+		if err != nil {
+			goto ERROR
+		}
+
 		startport, err = persistent.GetUint("startport")
+
+		if err != nil {
+			goto ERROR
+		}
+
 		endport, err = persistent.GetUint("endport")
+
+		if err != nil {
+			goto ERROR
+		}
+
 		conns, err = persistent.GetUint("conns")
+
+		if err != nil {
+			goto ERROR
+		}
+
 		webport, err = persistent.GetUint("webport")
 
                 if err != nil {

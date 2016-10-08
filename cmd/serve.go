@@ -58,11 +58,23 @@ $ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.
 		persistent := cmd.PersistentFlags()
 
                 bind, err = persistent.GetIP("bind")
-		webport, err = persistent.GetUint("webport")
-                hostname, err = persistent.GetString("hostname")
 
                 if err != nil {
+			goto ERROR
+		}
+		webport, err = persistent.GetUint("webport")
+
+		if err != nil {
+			goto ERROR
+		}
+
+                hostname, err = persistent.GetString("hostname")
+
+ERROR:
+                if err != nil {
                         fmt.Fprintln(os.Stderr, err)
+
+			return
                 }
 
 		// Generate the ports at this point, even though these are
