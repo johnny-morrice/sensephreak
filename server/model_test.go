@@ -7,38 +7,26 @@ import (
 func Test_activeports(t *testing.T) {
         tests := mktests()
 
-        expect := []int{80, 90, 91}
+        for i, ports := range []map[int]struct{} {
+		tests.activeports(),
+		tests.activeports(),
+	} {
+		if len(ports) != 3 {
+			t.Error("(case", i, ") Expected length 3 but was ", ports)
+			
+			return
+		}
 
-        actualMap := tests.activeports()
-	var actual []int
+		_, ok80 := ports[80]
+		_, ok90 := ports[90]
+		_, ok91 := ports[91]
 
-	for i, _ := range actualMap {
-		actual = append(actual, i)
+		if !(ok80 && ok90 && ok91) {
+			t.Error("(case", i, ") Expected ports but received", ports)
+		}
 	}
 
-        for i, acp := range actual {
-                exp := expect[i]
 
-                if acp != exp {
-                        t.Error("Expected", exp, "but received", acp)
-                }
-        }
-
-	actualMap = tests.activeports()
-	actual = nil
-
-	for i, _ := range actualMap {
-		actual = append(actual, i)
-	}
-
-        // Repeat to test the cache.
-        for i, acp := range actual {
-                exp := expect[i]
-
-                if acp != exp {
-                        t.Error("(cached) Expected", exp, " but received", acp)
-                }
-        }
 }
 
 func Test_success(t *testing.T) {
