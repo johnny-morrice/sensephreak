@@ -38,14 +38,15 @@ func (rset *resultset) failports() []int {
 		good[port] = struct{}{}
 	}
 
-	bad := []int{}
-
+	var bad []int
+	active := rset.tests.activeports()
+	
 	for port := rset.startport; port <= rset.endport; port++ {
 		if _, exempt := good[port]; exempt {
 			continue
 		}
 
-		if _, present := rset.tests.portcache[port]; !present {
+		if _, present := active[port]; !present {
 			continue
 		}
 
