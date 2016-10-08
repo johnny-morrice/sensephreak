@@ -10,8 +10,8 @@ import (
         "github.com/gorilla/mux"
 )
 
-func Serve(bind net.IP, hostname string, ports []int) {
-	ph := mkphreak(bind.String(), hostname)
+func Serve(bind net.IP, hostname string, webport int, ports []int) {
+	ph := mkphreak(bind.String(), hostname, webport)
 
         tests := make([]*testcase, len(ports))
 
@@ -48,11 +48,11 @@ func Serve(bind net.IP, hostname string, ports []int) {
 	wg.Wait()
 }
 
-func mkphreak(bind, hostname string) *phreak {
+func mkphreak(bind, hostname string, webport int) *phreak {
 	ph := &phreak{}
 	ph.commands = make(chan command)
 	ph.tests = &testset{}
-	ph.webport = Webport
+	ph.webport = webport
 	ph.bind = bind
         ph.hostname = hostname
 
@@ -79,9 +79,9 @@ func (ph *phreak) serveweb() {
 
 	front := &frontend{}
 	front.host = ph.hostname
-	front.apiport = Webport
+	front.apiport = ph.webport
 
-        webtest := ph.addtestcase(Webport)
+        webtest := ph.addtestcase(ph.webport)
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", front.index).Methods("GET")
@@ -242,6 +242,5 @@ func loglisten(srv *http.Server) {
         fmt.Fprintf(os.Stderr, "Serving on: %v\n", srv.Addr)
 }
 
-const Webport = 80
 const debug = true
 const trace = false

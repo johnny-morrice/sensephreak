@@ -26,7 +26,6 @@ import (
 
 	"github.com/spf13/cobra"
         "github.com/johnny-morrice/sensephreak/scanner"
-        "github.com/johnny-morrice/sensephreak/server"
 )
 
 // scanCmd represents the scan command
@@ -48,8 +47,10 @@ $ sensephreak scan --remote yoursite.com
 		var startport uint
 		var endport uint
 		var conns uint
+		var webport uint
                 var listports []int
                 var err error
+		var scan *scanner.Scan
 
 		persistent := cmd.PersistentFlags()
 
@@ -58,14 +59,14 @@ $ sensephreak scan --remote yoursite.com
 		startport, err = persistent.GetUint("startport")
 		endport, err = persistent.GetUint("endport")
 		conns, err = persistent.GetUint("conns")
+		webport, err = persistent.GetUint("webport")
 
                 if err != nil {
-                        fmt.Fprint(os.Stderr, "%v\n", err)
+                        goto ERROR
                 }
 
-		scan := scanner.Scan{}
                 scan.Host = remote
-                scan.Apiport = server.Webport
+                scan.Apiport = int(webport)
 		scan.StartPort = int(startport)
 		scan.EndPort = int(endport)
 		scan.Conns = int(conns)
@@ -89,7 +90,7 @@ $ sensephreak scan --remote yoursite.com
 		}
 ERROR:
                 if err != nil {
-                        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+                        fmt.Fprintln(os.Stderr, err)
                 }
 	},
 }
@@ -104,5 +105,6 @@ func init() {
 	persistent.Uint("startport", portmin, "Start port")
 	persistent.Uint("endport", portmax, "End port")
 	persistent.Uint("conns", scanner.DefaultConns, "Number of connections")
+	persistent.Uint("webport", 80, "Web API port")
 
 }

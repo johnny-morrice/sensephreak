@@ -21,7 +21,9 @@
 package cmd
 
 import (
+	"fmt"
         "net"
+	"os"
 
         "github.com/johnny-morrice/sensephreak/server"
 	"github.com/spf13/cobra"
@@ -48,25 +50,38 @@ $ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.
 	Run: func(cmd *cobra.Command, args []string) {
                 var bind net.IP
                 var hostname string
+		var webport uint
                 var err error
 
-                bind, err = cmd.PersistentFlags().GetIP("bind")
+		var ports []int
+
+		persistent := cmd.PersistentFlags()
+
+                bind, err = persistent.GetIP("bind")
+		webport, err = persistent.GetUint("webport")
+                hostname, err = persistent.GetString("hostname")
 
                 if err != nil {
-                        panic(err)
+                        fmt.Fprintln(os.Stderr, err)
                 }
 
-                hostname, err = cmd.PersistentFlags().GetString("hostname")
+		// Generate the ports at this point, even though these are
+		// currently non-configurable.
+		skip := map[int]struct{}{}
+		// The main web port is a special case.
+		skip[int(webport)] = struct{}{}
 
-                if err != nil {
-                        panic(err)
-                }
+		for i := portmin; i < portmax; i++ {
+			if _, skipped := skip[i]; skipped {
+				continue
+			}
 
-                server.Serve(bind, hostname, defaultports)
+			ports = append(ports, i)
+		}
+
+                server.Serve(bind, hostname, int(webport), ports)
 	},
 }
-
-var defaultports []int
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
@@ -74,23 +89,8 @@ func init() {
 	persistent := serveCmd.PersistentFlags()
 	persistent.IP("bind", net.IP([]byte{127, 0, 0, 1}), "Interface on which to listen")
         persistent.String("hostname", "localhost", "External hostname (Mandatory for CORS)")
-
-        // Generate the ports at this point, even though these are
-        // currently non-configurable.
-        skip := map[int]struct{}{}
-        // The main web port is a special case.
-        skip[server.Webport] = struct{}{}
-
-        for i := portmin; i < portmax; i++ {
-                if _, skipped := skip[i]; skipped {
-                        continue
-                }
-
-                defaultports = append(defaultports, i)
-        }
+	persistent.Uint("webport", 80, "Web port")
 }
-
-
 
 const portmax = 65536
 const portmin = 1
