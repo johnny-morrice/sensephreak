@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
         "net"
 	"net/http"
 	"sync"
@@ -150,20 +149,13 @@ func (ph *phreak) addtestcase(port int) *testcase {
 // communicate with the loop over the `commands` channel.
 func (ph *phreak) mainloop() {
 	for cmd := range ph.commands {
-		var err error
-
 		switch cmd.ctype {
 		case _NEWTEST:
 			ph.launch(cmd.reg)
 		case _PING:
-			err = ph.ping(cmd.ping)
+			ph.ping(cmd.ping)
 		case _GETRESULT:
-			err = ph.badports(cmd.query)
-		}
-
-		if err != nil {
-			log.Printf("Error in mainloop: %v", err)
-			err = nil
+			ph.badports(cmd.query)
 		}
 	}
 }
@@ -191,7 +183,7 @@ func (ph *phreak) launch(r registration) {
                 id := len(ph.rsets)
                 ph.rsets = append(ph.rsets, rset)
 
-                reply.testid = id
+                reply.scanid = id
                 reply.userid = user.id
         }
 
@@ -294,7 +286,7 @@ type LaunchData struct {
 
 type regisreply struct {
         userdata
-        testid int
+        scanid int
         err error
 }
 
@@ -323,6 +315,6 @@ func forbidden(user *user) error {
         return fmt.Errorf("Forbidden for user: %v")
 }
 
-const debug = true
+const debug = false
 const trace = false
 const nouser = -1

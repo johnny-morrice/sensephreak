@@ -51,7 +51,7 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         session, err = getsession(r)
 
         if err != nil {
-                goto ERROR
+                log.Printf("Session error: %v", err)
         }
 
         userid = getsessionuser(session)
@@ -117,7 +117,7 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
         session, err = getsession(r)
 
         if err != nil {
-                goto ERROR
+		log.Printf("Session error: %v", err)
         }
 
         userid = getsessionuser(session)
@@ -175,7 +175,7 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
         session, err = getsession(r)
 
         if err != nil {
-                goto ERROR
+		log.Printf("Session error: %v", err)
         }
 
         userid = getsessionuser(session)
@@ -199,7 +199,7 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
         }
 
         if userid != reply.userid {
-                setsessionuser(session, userid)
+                setsessionuser(session, reply.userid)
 
                 err = session.Save(r, w)
 
@@ -208,7 +208,7 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
                 }
         }
 
-	err = c.ServeJson(reply.testid)
+	err = c.ServeJson(reply.scanid)
 
 ERROR:
 	if err != nil {
@@ -295,6 +295,11 @@ func getsession(r *http.Request) (*sessions.Session, error) {
 
 func getsessionuser(session *sessions.Session) int {
         maybeid, ok := session.Values["user"]
+
+	if debug {
+		log.Printf("session.Values: %v", session.Values)
+		log.Printf("user id is: %v", maybeid)
+	}
 
         if ok {
                 var id int

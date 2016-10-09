@@ -43,6 +43,7 @@ $ sensephreak scan --remote yoursite.com
 81`,
 	Run: func(cmd *cobra.Command, args []string) {
                 var remote string
+		var verbose bool
 		var good bool
 		var startport uint
 		var endport uint
@@ -61,6 +62,12 @@ $ sensephreak scan --remote yoursite.com
 		}
 
 		good, err = persistent.GetBool("good")
+
+		if err != nil {
+			goto ERROR
+		}
+
+		verbose, err = persistent.GetBool("verbose")
 
 		if err != nil {
 			goto ERROR
@@ -95,6 +102,7 @@ $ sensephreak scan --remote yoursite.com
 		scan.StartPort = int(startport)
 		scan.EndPort = int(endport)
 		scan.Conns = int(conns)
+		scan.Verbose = verbose
 
 		err = scan.Launch()
 
@@ -129,6 +137,7 @@ func init() {
 
 	persistent.String("remote", "localhost", "Remote host against which to scan")
 	persistent.Bool("good", false, "List ports that are not blocked.")
+	persistent.Bool("verbose", false, "More information on the program operation.")
 	persistent.Uint("startport", portmin, "Start port")
 	persistent.Uint("endport", portmax, "End port")
 	persistent.Uint("conns", scanner.DefaultConns, "Number of connections")

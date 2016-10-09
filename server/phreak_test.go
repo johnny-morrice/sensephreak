@@ -7,15 +7,20 @@ import (
 func Test_launch(t *testing.T) {
 	ph := testphreak()
 
-	expectA := 0
-	expectB := 1
+	expectA := regisreply{}
+	expectA.userid = 0
+	expectA.scanid = 0
+	expectB := regisreply{}
+	expectB.userid = 1
+	expectB.scanid = 1
 
 	reg := registration{}
-	reg.newid = make(chan int)
+	reg.userid = nouser
+	reg.reply = make(chan regisreply)
 
 	go ph.launch(reg)
 
-	actualA := <-reg.newid
+	actualA := <-reg.reply
 
 	if actualA != expectA {
 		t.Error("Expected %v but received %v", expectA, actualA)
@@ -23,7 +28,7 @@ func Test_launch(t *testing.T) {
 
 	go ph.launch(reg)
 
-	actualB := <-reg.newid
+	actualB := <-reg.reply
 
 	if actualB != expectB {
 		t.Error("Expected %v but received %v", expectB, actualB)
@@ -33,51 +38,73 @@ func Test_ping(t *testing.T) {
 	ph := testphreak()
 
 	reg := registration{}
-	reg.newid = make(chan int)
+	reg.userid = nouser
+	reg.reply = make(chan regisreply)
 
 	go ph.launch(reg)
 
-	rset := <-reg.newid
+	reply := <-reg.reply
 
-	res := result{}
-	res.port = 80
-	res.set = uint64(rset)
-	res.done = make(chan struct{})
+	if reply.err != nil {
+		t.Error(reply.err)
+	}
 
-	go ph.ping(res)
+	ping := ping{}
+	ping.port = 80
+	ping.set = uint64(reply.scanid)
+	ping.reply = make(chan pingreply)
 
-	<-res.done
+	go ph.ping(ping)
+
+	pingreply := <-ping.reply
+
+	if pingreply.err != nil {
+		t.Error(pingreply.err)
+	}
 }
 func Test_badports(t *testing.T) {
 	ph := testphreak()
 
 	reg := registration{}
-	reg.newid = make(chan int)
+	reg.userid = nouser
+	reg.reply = make(chan regisreply)
 
 	go ph.launch(reg)
 
-	rset := <-reg.newid
+	reply := <-reg.reply
 
-	res := result{}
-	res.port = 80
-	res.set = uint64(rset)
-	res.done = make(chan struct{})
+	if reply.err != nil {
+		t.Error(reply.err)
+	}
 
-	go ph.ping(res)
+	ping := ping{}
+	ping.port = 80
+	ping.set = uint64(reply.scanid)
+	ping.reply = make(chan pingreply)
 
-	<-res.done
+	go ph.ping(ping)
+
+	pingreply := <-ping.reply
+
+	if pingreply.err != nil {
+		t.Error(pingreply.err)
+	}
 
 	q := query{}
-	q.rset = uint64(rset)
-	q.failports = make(chan []int)
+	q.rset = uint64(reply.scanid)
+	q.reply = make(chan queryreply)
 
 	go ph.badports(q)
 
 	expect := []int{90}
 
-	actual := <-q.failports
+	qreply := <-q.reply
 
-	for i, acp := range actual {
+	if qreply.err != nil {
+		t.Error(qreply.err)
+	}
+
+	for i, acp := range qreply.badports {
 		exp := expect[i]
 
 		if acp != exp {

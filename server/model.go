@@ -26,7 +26,7 @@ type accounts struct {
 }
 
 func (a *accounts) getuser(id int) (*user, error) {
-        if id > len(a.users) - 1 {
+        if id < 0 || id >= len(a.users) {
                 return nil, fmt.Errorf("Invalid user id: %v", id)
         }
 

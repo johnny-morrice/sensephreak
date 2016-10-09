@@ -20,6 +20,8 @@ type Scan struct {
 	StartPort int
 	EndPort int
 	Conns int
+	Verbose bool
+
 	sem     chan struct{}
 }
 
@@ -45,6 +47,8 @@ func (scan *Scan) Launch() error {
                 scan.Conns = DefaultConns
         }
 
+	initcookies()
+
 	scan.sem = make(chan struct{}, scan.Conns)
 
 	url := scan.Apipath("/test", scan.Apiport)
@@ -62,6 +66,10 @@ func (scan *Scan) Launch() error {
 		return errors.Wrap(err, "Failed to encode LaunchData")
 	}
 
+	if trace {
+		dumpCookies("pre-launch", url)
+	}
+
 	var resp *http.Response
 	resp, err = http.Post(url, plaintype, buff)
 
@@ -70,6 +78,16 @@ func (scan *Scan) Launch() error {
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("Failed to launch test with bad response status: %v", resp.StatusCode)
+
+		return err
+	}
+
+	if trace {
+		dumpCookies("post-launch", url)
+	}
 
 	var id int
 	dec := json.NewDecoder(resp.Body)
@@ -92,7 +110,7 @@ func (scan *Scan) Scanall() ([]int, error) {
 		go func(port int) {
 			err := scan.Ping(port)
 
-			if trace && err != nil {
+			if scan.Verbose && err != nil {
 				fmt.Fprintf(os.Stderr, "error pinging port %v: %v\n", port, err)
 			}
 
@@ -111,23 +129,32 @@ func (scan *Scan) Scanall() ([]int, error) {
 }
 
 func (scan *Scan) Ping(port int) error {
-        var ret error
+        var err error
 
 	scan.withlimit(func() {
 		url := scan.Apipath(fmt.Sprintf("/test/%v/ping", scan.Id), port)
 
-		resp, err := http.Post(url, plaintype, nilreader())
+		if trace {
+			dumpCookies("pre-ping", url)
+		}
+
+		var resp *http.Response
+		resp, err = http.Post(url, plaintype, nilreader())
 
 		if err != nil {
-			ret = err
-
 			return
 		}
 
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			err = fmt.Errorf("Ping failed with bad response status: %v", resp.StatusCode)
+
+			return
+		}
 	})
 
-	return ret
+	return err
 }
 
 func (scan *Scan) BadPorts() ([]int, error) {
@@ -140,6 +167,12 @@ func (scan *Scan) BadPorts() ([]int, error) {
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("BadPorts failed with response status: %v", resp.StatusCode)
+
+		return nil, err
+	}
 
 	ports := []int{}
 	dec := json.NewDecoder(resp.Body)
@@ -170,4 +203,4 @@ func nilreader() io.Reader {
 
 const plaintype = "text/plain"
 const DefaultConns = 50
-const trace = true
+const trace = false
