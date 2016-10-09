@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"sync"
 
@@ -70,17 +69,18 @@ func (scan *Scan) Launch() error {
 		dumpCookies("pre-launch", url)
 	}
 
-	var resp *http.Response
-	resp, err = http.Post(url, plaintype, buff)
+	var body io.ReadCloser
+	var status int
+	body, status, err = post(url, plaintype, buff)
 
 	if err != nil {
 		return errors.Wrap(err, "Failed to launch test")
 	}
 
-	defer resp.Body.Close()
+	defer body.Close()
 
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("Failed to launch test with bad response status: %v", resp.StatusCode)
+	if status != 200 {
+		err = fmt.Errorf("Failed to launch test with bad response status: %v", status)
 
 		return err
 	}
@@ -90,7 +90,7 @@ func (scan *Scan) Launch() error {
 	}
 
 	var id int
-	dec := json.NewDecoder(resp.Body)
+	dec := json.NewDecoder(body)
 	err = dec.Decode(&id)
 
 	if err != nil {
@@ -138,17 +138,18 @@ func (scan *Scan) Ping(port int) error {
 			dumpCookies("pre-ping", url)
 		}
 
-		var resp *http.Response
-		resp, err = http.Post(url, plaintype, nilreader())
+		var body io.ReadCloser
+		var status int
+		body, status, err = post(url, plaintype, nilreader())
 
 		if err != nil {
 			return
 		}
 
-		defer resp.Body.Close()
+		defer body.Close()
 
-		if resp.StatusCode != 200 {
-			err = fmt.Errorf("Ping failed with bad response status: %v", resp.StatusCode)
+		if status != 200 {
+			err = fmt.Errorf("Ping failed with bad response status: %v", status)
 
 			return
 		}
@@ -160,22 +161,22 @@ func (scan *Scan) Ping(port int) error {
 func (scan *Scan) BadPorts() ([]int, error) {
 	url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), scan.Apiport)
 
-	resp, err := http.Get(url)
+	body, status, err := get(url)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to GET BadPorts")
 	}
 
-	defer resp.Body.Close()
+	defer body.Close()
 
-	if resp.StatusCode != 200 {
-		err = fmt.Errorf("BadPorts failed with response status: %v", resp.StatusCode)
+	if status != 200 {
+		err = fmt.Errorf("BadPorts failed with response status: %v", status)
 
 		return nil, err
 	}
 
 	ports := []int{}
-	dec := json.NewDecoder(resp.Body)
+	dec := json.NewDecoder(body)
 	err = dec.Decode(&ports)
 
 	if err != nil {

@@ -21,12 +21,22 @@ func initcookies() {
 	http.DefaultClient.Jar = jar
 }
 
-func get(url string) (io.ReadCloser, error) {
-	return nil, nil
+func get(url string) (io.ReadCloser, int, error) {
+	resp, err := http.Get(url)
+	return responsedata(resp, err)
 }
 
-func post(url, ctype string, content io.Reader) (io.ReadCloser, error) {
-	return nil, nil
+func post(url, ctype string, content io.Reader) (io.ReadCloser, int, error) {
+	resp, err := http.Post(url, ctype, content)
+	return responsedata(resp, err)
+}
+
+func responsedata(resp *http.Response, err error) (io.ReadCloser, int, error) {
+	if err == nil {
+		return resp.Body, resp.StatusCode, nil
+	} else {
+		return nil, 0, err
+	}
 }
 
 func dumpCookies(when,  urltext string) {
