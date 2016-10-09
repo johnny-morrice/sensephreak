@@ -246,7 +246,6 @@ func (ch corshandler) cors(w http.ResponseWriter, req *http.Request) {
 	} else {
 		if trace {
                 	log.Printf("Bad Origin header: %v", originheads)
-
 		}
 
 		return
