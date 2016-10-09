@@ -1,8 +1,8 @@
-# Sensesphreak: single-exe blocked port detector
+# Sensesphreak: single-exe outgoing port block scanner
 
 ![Sensephreak Screenshot](sensephreak.png)
 
-Sensephreak is a single-exe blocked port detector for the web.
+Sensephreak is a single-exe outgoint port block scanner for the web.
 
 It should be considered beta software at this stage.
 
