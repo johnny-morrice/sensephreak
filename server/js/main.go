@@ -10,8 +10,6 @@ func main() {
 }
 
 type ScanOpts struct {
-	*js.Object
-
 	scanner.Scan
 
 	OnSuccess func(goodports, badports []int)

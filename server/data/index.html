@@ -41,7 +41,10 @@
 		function onSuccess(goodports, badports) {
       var badStatus = $("#badStatus");
       var goodStatus = $("#goodStatus")
+      var goodContainer= $("<div></div>");
+      var badContainer = $("<div></div>");
 			var statuses = [goodStatus, badStatus];
+      var containers = [goodContainer, badContainer];
 
 			var startPort = parseInt($("#advanced-start-port").val());
 			var endPort = parseInt($("#advanced-end-port").val())
@@ -52,20 +55,25 @@
 			showIfScanned();
 
 			if (goodports.length > 0) {
-				goodStatus.append($('<p class="success-header">Unblocked ports:</p>'));
+				goodContainer.append($('<p class="success-header">Unblocked ports:</p>'));
 			} else {
-				badStatus.append($('<p class="success-header">All scanned ports were blocked.</p>'));
+				goodContainer.append($('<p class="success-header">All scanned ports were blocked.</p>'));
 			}
 
 			if (badports.length > 0) {
-				badStatus.append($('<p class="success-header">Blocked ports:</p>'));
+				badContainer.append($('<p class="success-header">Blocked ports:</p>'));
 			} else {
-				badStatus.append($('<p class="success-header">All scanned ports were unblocked.</p>'));
+				badContainer.append($('<p class="success-header">All scanned ports were unblocked.</p>'));
 			}
-      statuses.forEach(function (status, i) {
+
+      containers.forEach(function (container, i) {
   			ports[i].forEach(function (port) {
-  				status.append('<p>' + port + '</p>');
+  				container.append('<p>' + port + '</p>');
   			});
+      });
+
+      statuses.forEach(function (status, i) {
+        status.append(containers[i]);
       });
 
 			badStatus.fadeIn();
@@ -146,7 +154,7 @@
   <body>
 		<div id="content">
 	    <h1>Sensephreak: Single-Exe Blocked Port Detector</h1>
-			<p id="download-link"><a href="http://github.com/johnny-morrice/sensephreak">Download single-exe server/scanner &amp; sourcecode.</a></p>
+			<p id="download-link"><a href="http://github.com/johnny-morrice/sensephreak">Download single-exe server/scanner &amp; sourcecode</a></p>
 			<input type="button" value="Scan Now" class="primary if-not-running" onclick="scan()"/>
 			<input type="button" value="Show advanced options" class="primary if-not-running if-basic" onclick="showAdvanced()">
 			<div id="advanced">
