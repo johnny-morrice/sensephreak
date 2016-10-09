@@ -34,3 +34,23 @@ input {
 	margin-top: 2em;
 	margin-bottom: 2em;
 }
+
+#progress {
+	animation-duration: 3s;
+	animation-name: fade;
+	animation-iteration-count: infinite;
+}
+
+@keyframes fade {
+	from {
+		opacity: 1.0;
+	}
+
+	50% {
+		opacity: 0.2;
+	}
+
+	to {
+		opacity: 1.0;
+	}
+}
