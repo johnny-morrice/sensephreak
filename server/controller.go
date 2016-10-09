@@ -10,7 +10,9 @@ import (
 
         "github.com/johnny-morrice/ctrl"
         "github.com/gorilla/mux"
+        "github.com/gorilla/sessions"
 )
+
 
 // testcase is a controller that runs on the given port.
 type testcase struct {
@@ -30,26 +32,13 @@ func (tcase *testcase) handler() http.Handler {
         return handler
 }
 
-func resultsetparam(c ctrl.C) (uint64, error) {
-	resultset, err := c.GetMuxVar("resultset")
-
-	if err != nil {
-		return 0, err
-	}
-
-	setid, err := strconv.ParseUint(resultset, 10, 64)
-
-	if err != nil {
-		return 0, err
-	}
-
-	return setid, nil
-}
-
 func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Forward declaration for goto.
-	res := result{}
+	ping := ping{}
 	cmd := command{}
+        reply := pingreply{}
+        var session *sessions.Session
+        var userid int
 
 	c := ctrl.New(w, r)
 
@@ -59,17 +48,32 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		goto ERROR
 	}
 
-	res.port = tc.port
-	res.set = rset
-        res.done = make(chan struct{})
+        session, err = getsession(r)
+
+        if err != nil {
+                goto ERROR
+        }
+
+        userid = getsessionuser(session)
+
+        // Send command to main loop.
+	ping.port = tc.port
+	ping.set = rset
+        ping.reply = make(chan pingreply)
+        ping.userid = userid
 
 	cmd.ctype = _PING
-	cmd.ping = res
+	cmd.ping = ping
 
 	tc.commands<- cmd
 
-	// Wait to be handled
-	<-res.done
+	// Receive command from main loop.
+	reply = <-ping.reply
+        err = reply.err
+
+        if err != nil {
+                goto ERROR
+        }
 
 	err = c.ServeJson(true)
 
@@ -94,8 +98,9 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
 	// Forward declare variables because we are using goto
 	q := query{}
 	cmd := command{}
-	var badports []int
-	var ok bool
+        reply := queryreply{}
+        var session *sessions.Session
+        var userid int
 
 	if debug {
 		fmt.Fprintln(os.Stderr, "getresults")
@@ -109,23 +114,33 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
 		goto ERROR
 	}
 
+        session, err = getsession(r)
+
+        if err != nil {
+                goto ERROR
+        }
+
+        userid = getsessionuser(session)
+
+        // Send command to main loop.
 	q.rset = resultset
-	q.failports = make(chan []int)
+	q.reply = make(chan queryreply)
+        q.userid = userid
 
 	cmd.ctype = _GETRESULT
 	cmd.query = q
 
 	api.commands<- cmd
 
-	badports, ok = <-q.failports
+        // Receive command from main loop.
+	reply = <-q.reply
+        err = reply.err
 
-	if !ok {
-		err = fmt.Errorf("Return channel closed")
+        if err != nil {
+                goto ERROR
+        }
 
-		goto ERROR
-	}
-
-	err = c.ServeJson(badports)
+	err = c.ServeJson(reply.badports)
 
 	if err == nil {
 		return
@@ -142,32 +157,60 @@ ERROR:
 func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 	c := ctrl.New(w, r)
 
-	packet := &LaunchData{}
+        var userid int
+        var session *sessions.Session
+        reg := registration{}
+        cmd := command{}
+        reply := regisreply{}
+
+        packet := &LaunchData{}
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(packet)
 
+
 	if err != nil {
-		log.Printf("Error decoding newtest request body: %v", err)
-
-		c.InternalError()
-
-		return
+		goto ERROR
 	}
 
-	reg := registration{}
-	reg.newid = make(chan int)
-	reg.LaunchData = *packet
+        session, err = getsession(r)
 
-	cmd := command{}
+        if err != nil {
+                goto ERROR
+        }
+
+        userid = getsessionuser(session)
+
+        // Send command to main loop.
+	reg.reply = make(chan regisreply)
+	reg.LaunchData = *packet
+        reg.userid = userid
+
 	cmd.ctype = _NEWTEST
 	cmd.reg = reg
 
 	api.commands <- cmd
 
-	id := <-reg.newid
+        // Receive reply from main loop.
+	reply = <-reg.reply
+        err = reply.err
 
-	err = c.ServeJson(id)
+        if err != nil {
+                goto ERROR
+        }
 
+        if userid != reply.userid {
+                setsessionuser(session, userid)
+
+                err = session.Save(r, w)
+
+                if err != nil {
+                        goto ERROR
+                }
+        }
+
+	err = c.ServeJson(reply.testid)
+
+ERROR:
 	if err != nil {
 		log.Printf("Error serving newtest: %v", err)
 
@@ -226,4 +269,45 @@ func (ch corshandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		ch.handler.ServeHTTP(w, req)
         }
+}
+
+func resultsetparam(c ctrl.C) (uint64, error) {
+	resultset, err := c.GetMuxVar("resultset")
+
+	if err != nil {
+		return 0, err
+	}
+
+	setid, err := strconv.ParseUint(resultset, 10, 64)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return setid, nil
+}
+
+var globalSessionStore *sessions.CookieStore
+
+func getsession(r *http.Request) (*sessions.Session, error) {
+        return globalSessionStore.Get(r, "session-name")
+}
+
+func getsessionuser(session *sessions.Session) int {
+        maybeid, ok := session.Values["user"]
+
+        if ok {
+                var id int
+                id, ok = maybeid.(int)
+
+                if ok {
+                    return id
+                }
+        }
+
+        return nouser
+}
+
+func setsessionuser(session *sessions.Session, userid int) {
+        session.Values["user"] = userid
 }

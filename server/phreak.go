@@ -8,14 +8,25 @@ import (
 	"sync"
         "os"
         "github.com/gorilla/mux"
+        "github.com/gorilla/sessions"
 )
 
-func Serve(bind net.IP, hostname string, webport int, ports []int) {
-	ph := mkphreak(bind.String(), hostname, webport)
+type Server struct {
+        Bind net.IP
+        Hostname string
+        Webport int
+        Ports []int
+        Secret string
+}
 
-        tests := make([]*testcase, len(ports))
+func (s Server) Serve() {
+        globalSessionStore = sessions.NewCookieStore([]byte(s.Secret))
 
-        for i, p := range ports {
+	ph := mkphreak(s.Bind.String(), s.Hostname, s.Webport)
+
+        tests := make([]*testcase, len(s.Ports))
+
+        for i, p := range s.Ports {
                 tests[i] = ph.addtestcase(p)
         }
 
@@ -52,6 +63,7 @@ func mkphreak(bind, hostname string, webport int) *phreak {
 	ph := &phreak{}
 	ph.commands = make(chan command)
 	ph.tests = &testset{}
+        ph.accounts = &accounts{}
 	ph.webport = webport
 	ph.bind = bind
         ph.hostname = hostname
@@ -61,6 +73,7 @@ func mkphreak(bind, hostname string, webport int) *phreak {
 
 // phreak checks if your firewall is blocking you from seeing some ports.
 type phreak struct {
+        accounts *accounts
 	tests    *testset
 	rsets    []*resultset
 	commands chan command
@@ -157,46 +170,87 @@ func (ph *phreak) mainloop() {
 
 // launch a new test.
 func (ph *phreak) launch(r registration) {
-	rset := &resultset{}
-	rset.tests = ph.tests
-	rset.startport = r.StartPort
-	rset.endport = r.EndPort
+        var err error
+        var user *user
+        if r.userid == nouser {
+                user = ph.accounts.newuser()
+        } else {
+                user, err = ph.accounts.getuser(r.userid)
+        }
 
-	id := len(ph.rsets)
-	ph.rsets = append(ph.rsets, rset)
+        reply := regisreply{}
+        reply.err = err
 
-	r.newid <- id
+        if err == nil {
+                rset := &resultset{}
+                rset.tests = ph.tests
+                rset.startport = r.StartPort
+                rset.endport = r.EndPort
+                rset.user = user
+
+                id := len(ph.rsets)
+                ph.rsets = append(ph.rsets, rset)
+
+                reply.testid = id
+                reply.userid = user.id
+        }
+
+	r.reply <- reply
 }
 
 // ping the service to show you can access a port.
-func (ph *phreak) ping(r result) error {
+func (ph *phreak) ping(r ping) error {
+        reply := pingreply{}
+
 	if !ph.okresultid(r.set) {
-		return fmt.Errorf("Bad result id: %v", r.set)
+		reply.err = fmt.Errorf("Bad result id: %v", r.set)
 	}
 
-	rset := ph.rsets[r.set]
+        var user *user
+        user, reply.err = ph.accounts.getuser(r.userid)
 
-	rset.success(r.port)
+        if reply.err == nil {
+        	rset := ph.rsets[r.set]
 
-	r.done <- struct{}{}
+                if rset.user == user {
+                        rset.success(r.port)
 
-	return nil
+                } else {
+                        reply.err = forbidden(user)
+                }
+        }
+
+	r.reply <- reply
+
+	return reply.err
 }
 
 // badports responds to a query for the failing ports.
 func (ph *phreak) badports(q query) error {
+        reply := queryreply{}
+
 	if !ph.okresultid(q.rset) {
-		close(q.failports)
-		return fmt.Errorf("Bad result id: %v", q.rset)
+		reply.err = fmt.Errorf("Bad result id: %v", q.rset)
 	}
 
-	rset := ph.rsets[q.rset]
+        var user *user
+        user, reply.err = ph.accounts.getuser(q.userid)
 
-	badports := rset.failports()
+        if reply.err == nil {
+                rset := ph.rsets[q.rset]
 
-	q.failports <- badports
+                if rset.user == user {
+                        badports := rset.failports()
 
-	return nil
+                        reply.badports = badports
+                } else {
+                        reply.err = forbidden(user)
+                }
+        }
+
+	q.reply <- reply
+
+	return reply.err
 }
 
 func (ph *phreak) okresultid(resultset uint64) bool {
@@ -212,15 +266,25 @@ const (
 )
 
 type command struct {
-	ctype comtype
+        ctype comtype
 	reg   registration
 	query query
-	ping  result
+	ping  ping
+}
+
+type userdata struct {
+        userid int
+}
+
+type queryreply struct {
+        badports []int
+        err error
 }
 
 type query struct {
+        userdata
 	rset      uint64
-	failports chan []int
+	reply chan queryreply
 }
 
 type LaunchData struct {
@@ -228,21 +292,37 @@ type LaunchData struct {
 	EndPort int
 }
 
-type registration struct {
-	LaunchData
-
-	newid chan int
+type regisreply struct {
+        userdata
+        testid int
+        err error
 }
 
-type result struct {
+type registration struct {
+	LaunchData
+        userdata
+	reply chan regisreply
+}
+
+type pingreply struct {
+        err error
+}
+
+type ping struct {
+        userdata
 	port int
 	set  uint64
-	done chan struct{}
+	reply chan pingreply
 }
 
 func loglisten(srv *http.Server) {
         fmt.Fprintf(os.Stderr, "Serving on: %v\n", srv.Addr)
 }
 
+func forbidden(user *user) error {
+        return fmt.Errorf("Forbidden for user: %v")
+}
+
 const debug = true
 const trace = false
+const nouser = -1

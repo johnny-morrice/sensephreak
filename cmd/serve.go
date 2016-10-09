@@ -21,7 +21,9 @@
 package cmd
 
 import (
+        "crypto/rand"
 	"fmt"
+        "math/big"
         "net"
 	"os"
 
@@ -52,6 +54,7 @@ $ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.
                 var hostname string
 		var webport uint
                 var err error
+                var secret string
 
 		var ports []int
 
@@ -70,11 +73,21 @@ $ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.
 
                 hostname, err = persistent.GetString("hostname")
 
+                if err != nil {
+			goto ERROR
+		}
+
+                secret, err = persistent.GetString("secret")
+
 ERROR:
                 if err != nil {
                         fmt.Fprintln(os.Stderr, err)
 
 			return
+                }
+
+                if secret == randomsecret {
+                        secret = cryptrandstr(20)
                 }
 
 		// Generate the ports at this point, even though these are
@@ -91,7 +104,14 @@ ERROR:
 			ports = append(ports, i)
 		}
 
-                server.Serve(bind, hostname, int(webport), ports)
+                s := server.Server{}
+                s.Bind = bind
+                s.Hostname = hostname
+                s.Webport = int(webport)
+                s.Ports = ports
+                s.Secret = secret
+
+                s.Serve()
 	},
 }
 
@@ -102,7 +122,29 @@ func init() {
 	persistent.IP("bind", net.IP([]byte{127, 0, 0, 1}), "Interface on which to listen")
         persistent.String("hostname", "localhost", "External hostname (Mandatory for CORS)")
 	persistent.Uint("webport", 80, "Web port")
+        persistent.String("secret", randomsecret, "Cookie cache secret")
+}
+
+// Strongly random digit (0-9) string of the given length.
+func cryptrandstr(length int) string {
+        var out string
+
+        max := big.NewInt(9)
+        for i := 0; i < length; i++ {
+                next, err := rand.Int(rand.Reader, max)
+
+                if err != nil {
+                        panic(err)
+                }
+
+                nextstr := next.String()
+
+                out = out + nextstr
+        }
+
+        return out
 }
 
 const portmax = 65535
 const portmin = 1
+const randomsecret = "(random)"
