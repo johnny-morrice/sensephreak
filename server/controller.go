@@ -256,6 +256,7 @@ func (ch corshandler) cors(w http.ResponseWriter, req *http.Request) {
         _, ok := ch.allowed[origin];
 
         if any || ok {
+		w.Header()["Access-Control-Allow-Credentials"] = []string{"true"}
 		w.Header()["Access-Control-Allow-Origin"] = []string{origin}
 		w.Header()["Access-Control-Allow-Headers"] = ch.headers
 	}
