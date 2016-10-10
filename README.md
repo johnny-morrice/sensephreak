@@ -14,9 +14,9 @@ sensephreak requires go-bindata command to compile-in data files.  The following
 command will install everything, assuming you have the Go compiler installed,
 and your `$GOPATH/bin` in your `$PATH`.
 
-				$ go get -u github.com/jteeuwen/go-bindata && \\
-					go get -u -d github.com/johnny-morrice/sensephreak && \\
-					go generate github.com/johnny-morrice/sensephreak/... && \\
+				$ go get -u github.com/jteeuwen/go-bindata && \
+					go get -u -d github.com/johnny-morrice/sensephreak && \
+					go generate github.com/johnny-morrice/sensephreak/... && \
 					go install github.com/johnny-morrice/sensephreak
 
 ## Examples:
