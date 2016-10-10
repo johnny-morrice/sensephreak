@@ -15,6 +15,7 @@ have the Go compiler installed, and your `$GOPATH/bin` in your `$PATH`.
 
 				$ go get -u github.com/jteeuwen/go-bindata && \
 					go get -u github.com/gopherjs/gopherjs && \
+					go get -u honnef.co/go/js/xhr && \
 					go get -u -d github.com/johnny-morrice/sensephreak && \
 					go generate github.com/johnny-morrice/sensephreak/... && \
 					go install github.com/johnny-morrice/sensephreak
