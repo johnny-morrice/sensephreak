@@ -10,11 +10,11 @@ After running an example server command, visit the server in your browser.
 
 ## How to install from source
 
-sensephreak requires go-bindata command to compile-in data files.  The following
-command will install everything, assuming you have the Go compiler installed,
-and your `$GOPATH/bin` in your `$PATH`.
+The following command will install sensephreak and dependencies, assuming you
+have the Go compiler installed, and your `$GOPATH/bin` in your `$PATH`.
 
 				$ go get -u github.com/jteeuwen/go-bindata && \
+					go get -u github.com/gopherjs/gopherjs && \
 					go get -u -d github.com/johnny-morrice/sensephreak && \
 					go generate github.com/johnny-morrice/sensephreak/... && \
 					go install github.com/johnny-morrice/sensephreak
