@@ -1,5 +1,5 @@
-//go:generate gopherjs build -m -o data/script.js js/main.go
 //go:generate go-bindata --pkg server data/
+//go:generate gopherjs build -m -o data/script.js js/main.go
 package server
 
 import (
