@@ -42,92 +42,106 @@ $ sensephreak scan --remote yoursite.com
 25
 81`,
 	Run: func(cmd *cobra.Command, args []string) {
-                var remote string
-		var verbose bool
-		var good bool
-		var startport uint
-		var endport uint
-		var conns uint
-		var webport uint
-                var listports []int
-                var err error
-		scan := &scanner.Scan{}
-
-		persistent := cmd.PersistentFlags()
-
-		remote, err = persistent.GetString("remote")
+		scanargs, err := getscanargs(cmd)
 
 		if err != nil {
-			goto ERROR
+			fmt.Fprintf(os.Stderr, "Error processing arguments: %v\n", err)
+
+			return
 		}
 
-		good, err = persistent.GetBool("good")
+		err = launchscan(scanargs)
 
-		if err != nil {
-			goto ERROR
-		}
-
-		verbose, err = persistent.GetBool("verbose")
-
-		if err != nil {
-			goto ERROR
-		}
-
-		startport, err = persistent.GetUint("startport")
-
-		if err != nil {
-			goto ERROR
-		}
-
-		endport, err = persistent.GetUint("endport")
-
-		if err != nil {
-			goto ERROR
-		}
-
-		conns, err = persistent.GetUint("conns")
-
-		if err != nil {
-			goto ERROR
-		}
-
-		webport, err = persistent.GetUint("webport")
-
-                if err != nil {
-                        goto ERROR
-                }
-
-                scan.Host = remote
-                scan.Apiport = int(webport)
-		scan.StartPort = int(startport)
-		scan.EndPort = int(endport)
-		scan.Conns = int(conns)
-		scan.Verbose = verbose
-
-		err = scan.Launch()
-
-                if err != nil {
-                        goto ERROR
-                }
-
-                listports, err = scan.Scanall()
-
-		if err != nil {
-			goto ERROR
-		}
-
-		if good {
-			listports = scan.GoodPorts(listports)
-		}
-
-		for _, p := range listports {
-			fmt.Printf("%v\n", p)
-		}
-ERROR:
                 if err != nil {
                         fmt.Fprintln(os.Stderr, err)
                 }
 	},
+}
+
+func launchscan(args *scanparam) error {
+        scan := &scanner.Scan{}
+
+        scan.Host = args.remote
+        scan.Apiport = int(args.webport)
+        scan.StartPort = int(args.startport)
+        scan.EndPort = int(args.endport)
+        scan.Conns = int(args.conns)
+        scan.Verbose = args.verbose
+
+        err := scan.Launch()
+
+	listports, err := scan.Scanall()
+
+	if err != nil {
+		return err
+	}
+
+	if args.good {
+		listports = scan.GoodPorts(listports)
+	}
+
+	for _, p := range listports {
+		fmt.Printf("%v\n", p)
+	}
+
+	return nil
+}
+
+func getscanargs(cmd *cobra.Command) (*scanparam, error) {
+	persistent := cmd.PersistentFlags()
+
+	args := &scanparam{}
+
+        var err error
+	args.remote, err = persistent.GetString("remote")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.good, err = persistent.GetBool("good")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.verbose, err = persistent.GetBool("verbose")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.startport, err = persistent.GetUint("startport")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.endport, err = persistent.GetUint("endport")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.conns, err = persistent.GetUint("conns")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.webport, err = persistent.GetUint("webport")
+
+	return args, err
+}
+
+type scanparam struct {
+	remote string
+	good bool
+	verbose bool
+	startport uint
+	endport uint
+	conns uint
+	webport uint
 }
 
 func init() {

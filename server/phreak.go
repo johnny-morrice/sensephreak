@@ -16,12 +16,16 @@ type Server struct {
         Webport int
         Ports []int
         Secret string
+
+        // For frontend
+        Title string
+        Heading string
 }
 
 func (s Server) Serve() {
         globalSessionStore = sessions.NewCookieStore([]byte(s.Secret))
 
-	ph := mkphreak(s.Bind.String(), s.Hostname, s.Webport)
+	ph := mkphreak(s)
 
         tests := make([]*testcase, len(s.Ports))
 
@@ -58,14 +62,20 @@ func (s Server) Serve() {
 	wg.Wait()
 }
 
-func mkphreak(bind, hostname string, webport int) *phreak {
+func mkphreak(s Server) *phreak {
 	ph := &phreak{}
 	ph.commands = make(chan command)
 	ph.tests = &testset{}
         ph.accounts = &accounts{}
-	ph.webport = webport
-	ph.bind = bind
-        ph.hostname = hostname
+	ph.webport = s.Webport
+	ph.bind = s.Bind.String()
+        ph.hostname = s.Hostname
+
+        ph.front = &frontend{}
+        ph.front.host = s.Hostname
+        ph.front.title = s.Title
+        ph.front.heading = s.Heading
+        ph.front.apiport = s.Webport
 
 	return ph
 }
@@ -79,6 +89,7 @@ type phreak struct {
 	webport  int
 	bind     string
         hostname string
+        front    *frontend
 }
 
 // serveweb runs a webserver for the main API and web interface.
@@ -89,17 +100,13 @@ func (ph *phreak) serveweb() {
 	api := &phapi{}
 	api.commands = ph.commands
 
-	front := &frontend{}
-	front.host = ph.hostname
-	front.apiport = ph.webport
-
         webtest := ph.addtestcase(ph.webport)
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", front.index).Methods("GET")
-        r.HandleFunc("/script.js", front.javascript).Methods("GET")
-	r.HandleFunc("/jquery-3.1.1.min.js", front.jquery).Methods("GET")
-        r.HandleFunc("/script.js.map", front.sourcemap).Methods("GET")
+	r.HandleFunc("/", ph.front.index).Methods("GET")
+        r.HandleFunc("/script.js", ph.front.javascript).Methods("GET")
+	r.HandleFunc("/jquery-3.1.1.min.js", ph.front.jquery).Methods("GET")
+        r.HandleFunc("/script.js.map", ph.front.sourcemap).Methods("GET")
 	r.HandleFunc("/api/test", api.newtest).Methods("POST")
 	r.HandleFunc("/api/test/{resultset}", api.getresults).Methods("GET")
         r.Handle("/api/test/{resultset}/ping", webtest)

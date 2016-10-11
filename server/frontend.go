@@ -11,6 +11,8 @@ import (
 
 type frontend struct {
 	host    string
+	title	string
+	heading	string
 	apiport int
         cache []byte
 }
@@ -55,12 +57,16 @@ func (fr *frontend) indexpage() []byte {
 
 	variables := struct {
 		Css        string
-		Hostname   string
 		Apiport    int
+		Hostname   string
+		Title	   string
+		Heading    string
 	}{
 		Css:        style,
 		Apiport:    fr.apiport,
 		Hostname:   fr.host,
+		Title:      fr.title,
+		Heading:    fr.heading,
 	}
 
 	buff := &bytes.Buffer{}

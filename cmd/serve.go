@@ -50,69 +50,97 @@ $ sensephreak serve --bind 0.0.0.0
 $ docker build -t sensephreak .
 $ docker run --cap-add SYS_RESOURCE --name test --rm sensephreak serve --bind 0.0.0.0`,
 	Run: func(cmd *cobra.Command, args []string) {
-                var bind net.IP
-                var hostname string
-		var webport uint
-                var err error
-                var secret string
-
-		var ports []int
-
-		persistent := cmd.PersistentFlags()
-
-                bind, err = persistent.GetIP("bind")
+                serveargs, err := getserveargs(cmd)
 
                 if err != nil {
-			goto ERROR
-		}
-		webport, err = persistent.GetUint("webport")
-
-		if err != nil {
-			goto ERROR
-		}
-
-                hostname, err = persistent.GetString("hostname")
-
-                if err != nil {
-			goto ERROR
-		}
-
-                secret, err = persistent.GetString("secret")
-
-ERROR:
-                if err != nil {
-                        fmt.Fprintln(os.Stderr, err)
+                        fmt.Fprintf(os.Stderr, "Error processing arguments\n", err)
 
 			return
                 }
 
-                if secret == randomsecret {
-                        secret = cryptrandstr(20)
+                launchserver(serveargs)
+	},
+}
+
+func launchserver(args *serveparams) {
+        if args.secret == randomsecret {
+                args.secret = cryptrandstr(20)
+        }
+
+        // Generate the ports at this point, even though these are
+        // currently non-configurable.
+        skip := map[int]struct{}{}
+        // The main web port is a special case.
+        skip[int(args.webport)] = struct{}{}
+
+        var ports []int
+        for i := portmin; i <= portmax; i++ {
+                if _, skipped := skip[i]; skipped {
+                        continue
                 }
 
-		// Generate the ports at this point, even though these are
-		// currently non-configurable.
-		skip := map[int]struct{}{}
-		// The main web port is a special case.
-		skip[int(webport)] = struct{}{}
+                ports = append(ports, i)
+        }
 
-		for i := portmin; i <= portmax; i++ {
-			if _, skipped := skip[i]; skipped {
-				continue
-			}
+        s := server.Server{}
+        s.Bind = args.bind
+        s.Hostname = args.hostname
+        s.Webport = int(args.webport)
+        s.Ports = ports
+        s.Secret = args.secret
+        s.Title = args.title
+        s.Heading = args.heading
 
-			ports = append(ports, i)
-		}
+        s.Serve()
+}
 
-                s := server.Server{}
-                s.Bind = bind
-                s.Hostname = hostname
-                s.Webport = int(webport)
-                s.Ports = ports
-                s.Secret = secret
+func getserveargs(cmd *cobra.Command) (*serveparams, error) {
+        var err error
+        persistent := cmd.PersistentFlags()
 
-                s.Serve()
-	},
+        args := &serveparams{}
+
+        args.bind, err = persistent.GetIP("bind")
+
+        if err != nil {
+                return nil, err
+        }
+        args.webport, err = persistent.GetUint("webport")
+
+        if err != nil {
+                return nil, err
+        }
+
+        args.hostname, err = persistent.GetString("hostname")
+
+        if err != nil {
+                return nil, err
+        }
+
+        args.secret, err = persistent.GetString("secret")
+
+        if err != nil {
+                return nil, err
+        }
+
+        args.title, err = persistent.GetString("title")
+
+        if err != nil {
+                return nil, err
+        }
+
+        args.heading, err = persistent.GetString("heading")
+
+        return args, err
+}
+
+type serveparams struct {
+        bind net.IP
+        webport uint
+        hostname string
+        secret string
+        title string
+        heading string
 }
 
 func init() {
@@ -123,6 +151,8 @@ func init() {
         persistent.String("hostname", "localhost", "External hostname (Mandatory for CORS)")
 	persistent.Uint("webport", 80, "Web port")
         persistent.String("secret", randomsecret, "Cookie cache secret")
+        persistent.String("title", "Outgoing Port Block Scanner", "Index page title")
+        persistent.String("heading", "Sensesphreak: single-exe outgoing port block scanner", "Index page heading")
 }
 
 // Strongly random digit (0-9) string of the given length.
