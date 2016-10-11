@@ -40,6 +40,8 @@ func (tc *testcase) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         var session *sessions.Session
         var userid int
 
+	nocache(w)
+
 	c := ctrl.New(w, r)
 
 	rset, err := resultsetparam(c)
@@ -102,6 +104,8 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
         var session *sessions.Session
         var userid int
 
+	nocache(w)
+
 	if debug {
 		fmt.Fprintln(os.Stderr, "getresults")
 	}
@@ -162,6 +166,8 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
         reg := registration{}
         cmd := command{}
         reply := regisreply{}
+
+	nocache(w)
 
         packet := &LaunchData{}
 	dec := json.NewDecoder(r.Body)
@@ -315,4 +321,24 @@ func getsessionuser(session *sessions.Session) int {
 
 func setsessionuser(session *sessions.Session, userid int) {
         session.Values["user"] = userid
+}
+
+func nocache(w http.ResponseWriter) {
+	headnames := []string {
+		"Cache-Control",
+		"Pragma",
+		"Expires",
+	}
+
+	headerval := [][]string {
+		[]string{"no-cache", "no-store", "must-revalidate"},
+		[]string{"no-cache"},
+		[]string{"0"},
+	}
+
+	for i, title := range headnames {
+		val := headerval[i]
+
+		w.Header()[title] = val
+	}
 }
