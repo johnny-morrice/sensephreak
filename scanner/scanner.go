@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/johnny-morrice/sensephreak/server"
+	"github.com/johnny-morrice/sensephreak/util"
 )
 
 type Scan struct {
@@ -52,7 +52,7 @@ func (scan *Scan) Launch() error {
 
 	url := scan.Apipath("/test", scan.Apiport)
 
-	packet := server.LaunchData{}
+	packet := util.LaunchData{}
 	packet.StartPort = scan.StartPort
 	packet.EndPort = scan.EndPort
 

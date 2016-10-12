@@ -11,6 +11,8 @@ import (
         "github.com/johnny-morrice/ctrl"
         "github.com/gorilla/mux"
         "github.com/gorilla/sessions"
+
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 
@@ -169,7 +171,7 @@ func (api *phapi) newtest(w http.ResponseWriter, r *http.Request) {
 
 	nocache(w)
 
-        packet := &LaunchData{}
+        packet := &util.LaunchData{}
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(packet)
 

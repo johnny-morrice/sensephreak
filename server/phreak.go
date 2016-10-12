@@ -8,6 +8,8 @@ import (
         "os"
         "github.com/gorilla/mux"
         "github.com/gorilla/sessions"
+
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 type Server struct {
@@ -286,11 +288,6 @@ type query struct {
 	reply chan queryreply
 }
 
-type LaunchData struct {
-	StartPort int
-	EndPort int
-}
-
 type regisreply struct {
         userdata
         scanid int
@@ -298,7 +295,7 @@ type regisreply struct {
 }
 
 type registration struct {
-	LaunchData
+	util.LaunchData
         userdata
 	reply chan regisreply
 }

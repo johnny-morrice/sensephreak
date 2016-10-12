@@ -27,6 +27,7 @@ import (
         "net"
 	"os"
 
+        "github.com/johnny-morrice/sensephreak/util"
         "github.com/johnny-morrice/sensephreak/server"
 	"github.com/spf13/cobra"
 )
@@ -67,7 +68,7 @@ func launchserver(args *serveparams) {
                 args.secret = cryptrandstr(20)
         }
 
-        ports, err := server.Ports(args.ports, int(args.webport))
+        ports, err := util.Ports(args.ports, int(args.webport))
 
         if err != nil {
                 fmt.Fprintf(os.Stderr, "Error in port specification: %v", err)

@@ -26,6 +26,7 @@ import (
 
 	"github.com/spf13/cobra"
         "github.com/johnny-morrice/sensephreak/scanner"
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 // scanCmd represents the scan command
@@ -152,8 +153,8 @@ func init() {
 	persistent.String("remote", "localhost", "Remote host against which to scan")
 	persistent.Bool("good", false, "List ports that are not blocked.")
 	persistent.Bool("verbose", false, "More information on the program operation.")
-	persistent.Uint("startport", portmin, "Start port")
-	persistent.Uint("endport", portmax, "End port")
+	persistent.Uint("startport", util.Portmin, "Start port")
+	persistent.Uint("endport", util.Portmax, "End port")
 	persistent.Uint("conns", scanner.DefaultConns, "Number of connections")
 	persistent.Uint("webport", 80, "Web API port")
 
