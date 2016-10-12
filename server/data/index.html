@@ -63,7 +63,7 @@
 
       containers.forEach(function (container, i) {
   			ports[i].forEach(function (port) {
-  				container.append('<p>' + port + '</p>');
+  				writeportinfo(port, container);
   			});
       });
 
@@ -72,6 +72,25 @@
       });
 
 			badStatus.fadeIn();
+		}
+
+		function writeportinfo(portinfo, container) {
+			var message;
+			switch (portinfo.State) {
+				case 0:
+					message = "ok";
+					break;
+				case 1:
+					message = "blocked";
+					break;
+				case 2:
+					message = "omitted from scan";
+					break;
+				default:
+					throw "Unknown state: " + portinfo.State;
+			}
+
+			container.append('<p>' + portinfo.Port + " " + message + '</p>');
 		}
 
 		function onFailure(error) {

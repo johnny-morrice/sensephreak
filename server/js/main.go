@@ -73,13 +73,3 @@ ERROR:
 		so.OnError(err.Error())
         }()
 }
-
-type PortStatus util.PortStatus
-
-func (ps PortStatus) GetPort() int {
-	return util.PortStatus(ps).Port
-}
-
-func (ps PortStatus) GetState() int {
-	return int(util.PortStatus(ps).State)
-}
