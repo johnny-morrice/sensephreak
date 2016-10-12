@@ -2,6 +2,8 @@ package server
 
 import (
 	"testing"
+
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 func Test_launch(t *testing.T) {
@@ -68,6 +70,8 @@ func Test_badports(t *testing.T) {
 	reg := registration{}
 	reg.userid = nouser
 	reg.reply = make(chan regisreply)
+        reg.StartPort = 80
+        reg.EndPort = 82
 
 	go ph.launch(reg)
 
@@ -96,7 +100,20 @@ func Test_badports(t *testing.T) {
 
 	go ph.badports(q)
 
-	expect := []int{90}
+	expect := []util.PortStatus{
+                util.PortStatus{
+                        Port: 80,
+                        State: util.PortOk,
+                },
+                util.PortStatus{
+                        Port: 81,
+                        State: util.PortBlocked,
+                },
+                util.PortStatus{
+                        Port: 82,
+                        State: util.PortOmitted,
+                },
+        }
 
 	qreply := <-q.reply
 
@@ -104,11 +121,11 @@ func Test_badports(t *testing.T) {
 		t.Error(qreply.err)
 	}
 
-	for i, acp := range qreply.badports {
+	for i, acp := range qreply.portinfo {
 		exp := expect[i]
 
 		if acp != exp {
-			t.Error("Expected %v but received %v", exp, acp)
+			t.Error("Expected", exp, "but received", acp)
 		}
 	}
 }

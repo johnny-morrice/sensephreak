@@ -146,7 +146,7 @@ func (api *phapi) getresults(w http.ResponseWriter, r *http.Request) {
                 goto ERROR
         }
 
-	err = c.ServeJson(reply.badports)
+	err = c.ServeJson(reply.portinfo)
 
 	if err == nil {
 		return

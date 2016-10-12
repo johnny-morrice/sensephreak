@@ -2,6 +2,8 @@ package server
 
 import (
 	"testing"
+
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 func Test_newuser(t *testing.T) {
@@ -53,17 +55,16 @@ func Test_activeports(t *testing.T) {
 		tests.activeports(),
 		tests.activeports(),
 	} {
-		if len(ports) != 3 {
+		if len(ports) != 2 {
 			t.Error("(case", i, ") Expected length 3 but was ", ports)
 
 			return
 		}
 
 		_, ok80 := ports[80]
-		_, ok90 := ports[90]
-		_, ok91 := ports[91]
+		_, ok90 := ports[81]
 
-		if !(ok80 && ok90 && ok91) {
+		if !(ok80 && ok90) {
 			t.Error("(case", i, ") Expected ports but received", ports)
 		}
 	}
@@ -74,9 +75,22 @@ func Test_activeports(t *testing.T) {
 func Test_success(t *testing.T) {
 	rset := mkresults()
 
-	rset.success(90)
+	rset.success(81)
 
-	expect := []int{80}
+	expect := []util.PortStatus{
+                util.PortStatus{
+                        Port: 80,
+                        State: util.PortBlocked,
+                },
+                util.PortStatus{
+                        Port: 81,
+                        State: util.PortOk,
+                },
+                util.PortStatus{
+                        Port: 82,
+                        State: util.PortOmitted,
+                },
+        }
 
 	actual := rset.failports()
 
@@ -92,7 +106,20 @@ func Test_success(t *testing.T) {
 func Test_failports(t *testing.T) {
 	rset := mkresults()
 
-	expect := []int{80, 90}
+	expect := []util.PortStatus{
+                util.PortStatus{
+                        Port: 80,
+                        State: util.PortBlocked,
+                },
+                util.PortStatus{
+                        Port: 81,
+                        State: util.PortBlocked,
+                },
+                util.PortStatus{
+                        Port: 82,
+                        State: util.PortOmitted,
+                },
+        }
 
 	actual := rset.failports()
 
@@ -109,7 +136,7 @@ func mkresults() *resultset {
 	rset := &resultset{}
 	rset.tests = mktests()
 	rset.startport = 80
-	rset.endport = 90
+	rset.endport = 82
 
 	return rset
 }
@@ -121,15 +148,13 @@ func mktests() *testset {
 	case80.port = 80
 
 	case90 := &testcase{}
-	case90.port = 90
+	case90.port = 81
 
-	case91 := &testcase{}
-	case91.port = 91
+
 
 	tests.cases = []*testcase{
 		case80,
 		case90,
-		case91,
 	}
 
 	return tests

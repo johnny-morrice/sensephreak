@@ -243,7 +243,7 @@ func (ph *phreak) badports(q query) error {
                 if rset.user == user {
                         badports := rset.failports()
 
-                        reply.badports = badports
+                        reply.portinfo = badports
                 } else {
                         reply.err = forbidden(user)
                 }
@@ -278,7 +278,7 @@ type userdata struct {
 }
 
 type queryreply struct {
-        badports []int
+        portinfo []util.PortStatus
         err error
 }
 

@@ -2,23 +2,25 @@ package server
 
 import (
         "fmt"
+
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 // testset is a specification of the ports that will be tested.
 type testset struct {
-	cases     []*testcase
-	portcache map[int]struct{}
+        cases     []*testcase
+        portcache map[int]struct{}
 }
 
 func (tset *testset) activeports() map[int]struct{} {
-	if tset.portcache == nil {
-		tset.portcache = make(map[int]struct{})
-		for _, tc := range tset.cases {
-			tset.portcache[tc.port] = struct{}{}
-		}
-	}
+        if tset.portcache == nil {
+                tset.portcache = make(map[int]struct{})
+                for _, tc := range tset.cases {
+                        tset.portcache[tc.port] = struct{}{}
+                }
+        }
 
-	return tset.portcache
+        return tset.portcache
 }
 
 type accounts struct {
@@ -67,31 +69,33 @@ func (rset *resultset) success(port int) {
 }
 
 // failports returns the ports that fail the test.
-func (rset *resultset) failports() []int {
+func (rset *resultset) failports() []util.PortStatus {
 	good := map[int]struct{}{}
 
 	for _, port := range rset.passing {
 		good[port] = struct{}{}
 	}
 
-	var bad []int
+	var out []util.PortStatus
 	active := rset.tests.activeports()
 
 	for port := rset.startport; port <= rset.endport; port++ {
+                status := util.PortStatus{}
+                status.Port = port
+
 		if _, exempt := good[port]; exempt {
-			continue
-		}
+			status.State = util.PortOk
+		} else if _, present := active[port]; !present {
+			status.State = util.PortOmitted
+		} else {
+                        status.State = util.PortBlocked
+                }
 
-		if _, present := active[port]; !present {
-			continue
-		}
-
-		bad = append(bad, port)
+		out = append(out, status)
 	}
 
-	return bad
+	return out
 }
-
 
 
 const nouser = -1
