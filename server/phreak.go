@@ -26,7 +26,6 @@ type Server struct {
         Webport int
         Ports []int
         Secret string
-	UseTLS bool
         // For frontend
         Title string
         Heading string
@@ -87,6 +86,7 @@ func mkphreak(s Server) *phreak {
         ph.front.title = s.Title
         ph.front.heading = s.Heading
         ph.front.apiport = s.Webport
+	ph.front.useTLS = s.https.UseTLS
 
 	return ph
 }

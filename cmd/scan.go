@@ -68,6 +68,7 @@ func launchscan(args *scanparam) error {
         scan.EndPort = int(args.endport)
         scan.Conns = int(args.conns)
         scan.Verbose = args.verbose
+	scan.UseTLS = args.tls
 
         err := scan.Launch()
 
@@ -136,6 +137,12 @@ func getscanargs(cmd *cobra.Command) (*scanparam, error) {
 
 	args.webport, err = persistent.GetUint("webport")
 
+	if err != nil {
+		return nil, err
+	}
+
+	args.tls, err = persistent.GetBool("tls")
+
 	return args, err
 }
 
@@ -147,6 +154,7 @@ type scanparam struct {
 	endport uint
 	conns uint
 	webport uint
+	tls bool
 }
 
 func init() {
@@ -157,6 +165,7 @@ func init() {
 	persistent.String("remote", "localhost", "Remote host against which to scan")
 	persistent.Bool("good", false, "List ports that are not blocked.")
 	persistent.Bool("verbose", false, "More information on the program operation.")
+	persistent.Bool("tls", false, "Use HTTPS")
 	persistent.Uint("startport", util.Portmin, "Start port")
 	persistent.Uint("endport", util.Portmax, "End port")
 	persistent.Uint("conns", scanner.DefaultConns, "Number of connections")

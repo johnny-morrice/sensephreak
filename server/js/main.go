@@ -49,6 +49,10 @@ func (so *ScanOpts) SetOnError(onError func(err string)) {
 	so.OnError = onError
 }
 
+func (so *ScanOpts) SetTLS(useTLS bool) {
+	so.UseTLS = useTLS
+}
+
 func (so *ScanOpts) WebScan() {
         go func() {
 		var ports []util.PortStatus

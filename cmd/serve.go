@@ -71,7 +71,7 @@ func launchserver(args *serveparams) {
         ports, err := util.Ports(args.ports, int(args.webport))
 
         if err != nil {
-                fmt.Fprintf(os.Stderr, "Error in port specification: %v", err)
+                fmt.Fprintf(os.Stderr, "Error in port specification: %v\n", err)
 
                 return
         }
@@ -138,6 +138,12 @@ func getserveargs(cmd *cobra.Command) (*serveparams, error) {
 		return nil, err
 	}
 
+	args.tls, err = persistent.GetBool("tls")
+
+	if err != nil {
+		return nil, err
+	}
+
 	args.certfile, err = persistent.GetString("certfile")
 
 	if err != nil {
@@ -172,7 +178,7 @@ func init() {
         persistent.String("secret", randomsecret, "Cookie cache secret")
         persistent.String("title", "Outgoing Port Block Scanner", "Index page title")
         persistent.String("heading", "Sensesphreak: single-exe outgoing port block scanner", "Index page heading")
-        persistent.String("ports", "", "Ports.  Format: +Port[:Range],-Port[:Range]... Starting with + overrides defaults.")
+        persistent.String("ports", "+1:65535", "Ports.  Format: +Port[:Range],-Port[:Range]... Starting with + overrides defaults.")
 	persistent.Bool("tls", false, "Use HTTPS")
 	persistent.String("certfile", "cert.pem", "HTTPS certificate")
 	persistent.String("keyfile", "key.pem", "HTTPS key")

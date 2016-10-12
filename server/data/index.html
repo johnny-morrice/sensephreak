@@ -25,6 +25,7 @@
       scan.SetConns(conns);
 			scan.SetOnSuccess(onSuccess);
 			scan.SetOnError(onFailure);
+			scan.SetTLS({{.UseTLS}});
 
 			emptyPortList();
 			hideIfScanned();
@@ -170,7 +171,7 @@
   <body>
 		<div id="content">
 	    <h1>{{.Heading}}</h1>
-			<p id="download-link"><a href="http://github.com/johnny-morrice/sensephreak">Download single-exe server/scanner &amp; sourcecode</a></p>
+			<p id="download-link"><a href="https://github.com/johnny-morrice/sensephreak">Download single-exe server/scanner &amp; sourcecode</a></p>
 			<input type="button" value="Scan Now" class="primary if-not-running" onclick="scan()"/>
 			<input type="button" value="Show advanced options" class="primary if-not-running if-basic" onclick="showAdvanced()">
 			<div id="advanced">

@@ -15,6 +15,7 @@ type frontend struct {
 	heading	string
 	apiport int
         cache []byte
+	useTLS bool
 }
 
 func (fr *frontend) getasset(name string) string {
@@ -61,12 +62,14 @@ func (fr *frontend) indexpage() []byte {
 		Hostname   string
 		Title	   string
 		Heading    string
+		UseTLS bool
 	}{
 		Css:        style,
 		Apiport:    fr.apiport,
 		Hostname:   fr.host,
 		Title:      fr.title,
 		Heading:    fr.heading,
+		UseTLS:     fr.useTLS,
 	}
 
 	buff := &bytes.Buffer{}

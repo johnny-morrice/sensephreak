@@ -20,6 +20,7 @@ type Scan struct {
 	EndPort int
 	Conns int
 	Verbose bool
+	UseTLS bool
 
 	sem     chan struct{}
 }
@@ -178,7 +179,12 @@ func (scan *Scan) withlimit(f func()) {
 }
 
 func (scan *Scan) Apipath(part string, port int) string {
-	return fmt.Sprintf("http://%v:%v/api%v", scan.Host, port, part)
+	proto := "http"
+	if scan.UseTLS {
+		proto = "https"
+	}
+
+	return fmt.Sprintf("%v://%v:%v/api%v", proto ,scan.Host, port, part)
 }
 
 func nilreader() io.Reader {
