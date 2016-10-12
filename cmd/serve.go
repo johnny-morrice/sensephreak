@@ -166,7 +166,6 @@ type serveparams struct {
 	tls bool
 	certfile string
 	keyfile string
-	origin
 }
 
 func init() {
