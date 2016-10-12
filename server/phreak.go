@@ -12,13 +12,21 @@ import (
         "github.com/johnny-morrice/sensephreak/util"
 )
 
+type https struct {
+	UseTLS bool
+	Certfile string
+	Keyfile string
+}
+
 type Server struct {
+	https
+
         Bind net.IP
         Hostname string
         Webport int
         Ports []int
         Secret string
-
+	UseTLS bool
         // For frontend
         Title string
         Heading string
@@ -72,6 +80,7 @@ func mkphreak(s Server) *phreak {
 	ph.webport = s.Webport
 	ph.bind = s.Bind.String()
         ph.hostname = s.Hostname
+	ph.https = s.https
 
         ph.front = &frontend{}
         ph.front.host = s.Hostname
@@ -84,6 +93,7 @@ func mkphreak(s Server) *phreak {
 
 // phreak checks if your firewall is blocking you from seeing some ports.
 type phreak struct {
+	https
         accounts *accounts
 	tests    *testset
 	rsets    []*resultset
@@ -119,7 +129,7 @@ func (ph *phreak) serveweb() {
                 loglisten(srv)
         }
 
-	err := srv.ListenAndServe()
+	err := ph.listenAndServe(srv)
 
         fmt.Fprintf(os.Stderr, "%v\n", err)
 }
@@ -135,9 +145,17 @@ func (ph *phreak) servetest(tcase *testcase) {
 
 	srv.Handler = tcase.handler()
 
-	err := srv.ListenAndServe()
+	err := ph.listenAndServe(srv)
 
         fmt.Fprintf(os.Stderr, "%v\n", err)
+}
+
+func (ph *phreak) listenAndServe(srv *http.Server) error {
+	if ph.UseTLS {
+		return srv.ListenAndServeTLS(ph.Certfile, ph.Keyfile)
+	} else {
+		return srv.ListenAndServe()
+	}
 }
 
 // addtestcase adds a new test case to the set for the given port, and returns

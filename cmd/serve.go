@@ -84,6 +84,9 @@ func launchserver(args *serveparams) {
         s.Secret = args.secret
         s.Title = args.title
         s.Heading = args.heading
+	s.UseTLS = args.tls
+	s.Certfile = args.certfile
+	s.Keyfile = args.keyfile
 
         s.Serve()
 }
@@ -131,6 +134,18 @@ func getserveargs(cmd *cobra.Command) (*serveparams, error) {
 
         args.ports, err = persistent.GetString("ports")
 
+	if err != nil {
+		return nil, err
+	}
+
+	args.certfile, err = persistent.GetString("certfile")
+
+	if err != nil {
+		return nil, err
+	}
+
+	args.keyfile, err = persistent.GetString("keyfile")
+
         return args, err
 }
 
@@ -142,6 +157,9 @@ type serveparams struct {
         title string
         heading string
         ports string
+	tls bool
+	certfile string
+	keyfile string
 }
 
 func init() {
@@ -155,6 +173,9 @@ func init() {
         persistent.String("title", "Outgoing Port Block Scanner", "Index page title")
         persistent.String("heading", "Sensesphreak: single-exe outgoing port block scanner", "Index page heading")
         persistent.String("ports", "", "Ports.  Format: +Port[:Range],-Port[:Range]... Starting with + overrides defaults.")
+	persistent.Bool("tls", false, "Use HTTPS")
+	persistent.String("certfile", "cert.pem", "HTTPS certificate")
+	persistent.String("keyfile", "key.pem", "HTTPS key")
 }
 
 // Strongly random digit (0-9) string of the given length.
