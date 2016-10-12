@@ -114,5 +114,10 @@ func Test_badports(t *testing.T) {
 }
 
 func testphreak() *phreak {
-	return mkphreak("127.0.0.1", "localhost", 80)
+        s := Server{}
+
+	ph := mkphreak(s)
+        ph.tests = mktests()
+
+        return ph
 }

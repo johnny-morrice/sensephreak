@@ -324,4 +324,3 @@ func forbidden(user *user) error {
 
 const debug = false
 const trace = false
-const nouser = -1

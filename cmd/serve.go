@@ -67,19 +67,12 @@ func launchserver(args *serveparams) {
                 args.secret = cryptrandstr(20)
         }
 
-        // Generate the ports at this point, even though these are
-        // currently non-configurable.
-        skip := map[int]struct{}{}
-        // The main web port is a special case.
-        skip[int(args.webport)] = struct{}{}
+        ports, err := server.Ports(args.ports, int(args.webport))
 
-        var ports []int
-        for i := portmin; i <= portmax; i++ {
-                if _, skipped := skip[i]; skipped {
-                        continue
-                }
+        if err != nil {
+                fmt.Fprintf(os.Stderr, "Error in port specification: %v", err)
 
-                ports = append(ports, i)
+                return
         }
 
         s := server.Server{}
@@ -131,6 +124,12 @@ func getserveargs(cmd *cobra.Command) (*serveparams, error) {
 
         args.heading, err = persistent.GetString("heading")
 
+        if err != nil {
+                return nil, err
+        }
+
+        args.ports, err = persistent.GetString("ports")
+
         return args, err
 }
 
@@ -141,6 +140,7 @@ type serveparams struct {
         secret string
         title string
         heading string
+        ports string
 }
 
 func init() {
@@ -153,6 +153,7 @@ func init() {
         persistent.String("secret", randomsecret, "Cookie cache secret")
         persistent.String("title", "Outgoing Port Block Scanner", "Index page title")
         persistent.String("heading", "Sensesphreak: single-exe outgoing port block scanner", "Index page heading")
+        persistent.String("ports", "", "Ports.  Format: +Port[:Range],-Port[:Range]... Starting with + overrides defaults.")
 }
 
 // Strongly random digit (0-9) string of the given length.
@@ -175,6 +176,4 @@ func cryptrandstr(length int) string {
         return out
 }
 
-const portmax = 65535
-const portmin = 1
 const randomsecret = "(random)"
