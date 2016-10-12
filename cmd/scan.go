@@ -78,11 +78,15 @@ func launchscan(args *scanparam) error {
 	}
 
 	if args.good {
-		listports = scan.GoodPorts(listports)
+		listports = util.GoodPorts(listports)
+	} else {
+		listports = util.BadPorts(listports)
 	}
 
 	for _, p := range listports {
-		fmt.Printf("%v\n", p)
+		p.Write(os.Stdout)
+
+                fmt.Print("\n")
 	}
 
 	return nil

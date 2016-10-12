@@ -2,6 +2,7 @@ package util
 
 import (
         "fmt"
+        "io"
         "sort"
         "strings"
         "strconv"
@@ -22,9 +23,13 @@ type portformat struct {
         endport int
 }
 
-func (pf portformat) transform(ports []int) []int {
+func (pf portformat) transform(ports []int, webport int) []int {
         if pf.cmd == addport {
                 for p := pf.startport; p <= pf.endport; p++ {
+                        if p == webport {
+                                continue
+                        }
+
                         ports = append(ports, p)
                 }
 
@@ -40,6 +45,10 @@ func (pf portformat) transform(ports []int) []int {
 
                 for _, p := range ports {
                         if _, bad := filter[p]; !bad {
+                                if p == webport {
+                                        continue
+                                }
+
                                 newports = append(newports, p)
                         }
                 }
@@ -121,7 +130,7 @@ func Ports(format string, webport int) ([]int, error) {
         }
 
         for _, pf := range pfs {
-                ports = pf.transform(ports)
+                ports = pf.transform(ports, webport)
         }
 
         sort.Sort(sort.IntSlice(ports))
@@ -130,20 +139,69 @@ func Ports(format string, webport int) ([]int, error) {
 }
 
 func initports(startport, endport, webport int) []int {
-        skip := map[int]struct{}{}
-        // The main web port is a special case.
-        skip[webport] = struct{}{}
-
         var ports []int
-        for i := startport; i <= endport; i++ {
-                if _, skipped := skip[i]; skipped {
+        for port := startport; port <= endport; port++ {
+                if webport == port {
                         continue
                 }
 
-                ports = append(ports, i)
+                ports = append(ports, port)
         }
 
         return ports
+}
+
+type Portstate uint8
+
+const (
+        PortOk = Portstate(iota)
+        PortBlocked
+        PortOmitted
+)
+
+type PortStatus struct {
+        Port int
+        State Portstate
+}
+
+func (ps PortStatus) Write(w io.Writer) {
+        var msg string
+        switch (ps.State) {
+        case PortOk:
+                msg = "ok"
+        case PortBlocked:
+                msg = "block"
+        case PortOmitted:
+                msg = "omit"
+        default:
+                panic(fmt.Sprintf("Unknown Portstate: %v", ps.State))
+        }
+
+        fmt.Fprintf(w, "%v\t%v", ps.Port, msg)
+}
+
+func GoodPorts(portinfo []PortStatus) []PortStatus {
+	var goodports []PortStatus
+
+	for _, info := range portinfo {
+		if info.State == PortOk {
+			goodports = append(goodports, info)
+		}
+	}
+
+	return goodports
+}
+
+func BadPorts(portinfo []PortStatus) []PortStatus {
+	var badports []PortStatus
+
+	for _, info := range portinfo {
+		if info.State == PortBlocked || info.State == PortOmitted {
+			badports = append(badports, info)
+		}
+	}
+
+	return badports
 }
 
 const Portmax = 65535

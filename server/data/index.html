@@ -14,11 +14,6 @@
 			var endPort = parseInt($("#advanced-end-port").val())
 			var conns = parseInt($("#advanced-conns").val());
 
-			var ports = [];
-			for (var i = startPort; i <= endPort; i++) {
-				ports.push(i);
-			}
-
 			hostname = "{{.Hostname}}";
 			apiport = {{.Apiport}};
 

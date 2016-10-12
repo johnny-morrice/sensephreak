@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gopherjs/gopherjs/js"
 	"github.com/johnny-morrice/sensephreak/scanner"
+        "github.com/johnny-morrice/sensephreak/util"
 )
 
 func main() {
@@ -12,7 +13,7 @@ func main() {
 type ScanOpts struct {
 	scanner.Scan
 
-	OnSuccess func(goodports, badports []int)
+	OnSuccess func(goodports, badports []util.PortStatus)
 	OnError func(err string)
 }
 
@@ -40,7 +41,7 @@ func (so *ScanOpts) SetEndPort(endPort int) {
 	so.EndPort = endPort
 }
 
-func (so *ScanOpts) SetOnSuccess(onSuccess func(goodports, badports []int)) {
+func (so *ScanOpts) SetOnSuccess(onSuccess func(goodports, badports []util.PortStatus)) {
 	so.OnSuccess = onSuccess
 }
 
@@ -50,17 +51,18 @@ func (so *ScanOpts) SetOnError(onError func(err string)) {
 
 func (so *ScanOpts) WebScan() {
         go func() {
-		var badports []int
+		var ports []util.PortStatus
 		err := so.Launch()
 
 		if err != nil {
 			goto ERROR
 		}
 
-        	badports, err = so.Scanall()
+        	ports, err = so.Scanall()
 
         	if err == nil {
-			goodports := so.GoodPorts(badports)
+			goodports := util.GoodPorts(ports)
+                        badports := util.BadPorts(ports)
 
 			so.OnSuccess(goodports, badports)
 
@@ -70,4 +72,14 @@ func (so *ScanOpts) WebScan() {
 ERROR:
 		so.OnError(err.Error())
         }()
+}
+
+type PortStatus util.PortStatus
+
+func (ps PortStatus) GetPort() int {
+	return util.PortStatus(ps).Port
+}
+
+func (ps PortStatus) GetState() int {
+	return int(util.PortStatus(ps).State)
 }

@@ -24,23 +24,6 @@ type Scan struct {
 	sem     chan struct{}
 }
 
-func (scan *Scan) GoodPorts(badports []int) []int {
-	badmap := make(map[int]struct{})
-	var goodports []int
-
-	for _, bad := range badports {
-		badmap[bad] = struct{}{}
-	}
-
-	for p := scan.StartPort; p <= scan.EndPort; p++ {
-		if _, bad := badmap[p]; !bad {
-			goodports = append(goodports, p)
-		}
-	}
-
-	return goodports
-}
-
 func (scan *Scan) Launch() error {
         if scan.Conns == 0 {
                 scan.Conns = DefaultConns
@@ -102,7 +85,7 @@ func (scan *Scan) Launch() error {
         return nil
 }
 
-func (scan *Scan) Scanall() ([]int, error) {
+func (scan *Scan) Scanall() ([]util.PortStatus, error) {
 	wg := sync.WaitGroup{}
 
 	for p := scan.StartPort; p <= scan.EndPort; p++ {
@@ -119,7 +102,7 @@ func (scan *Scan) Scanall() ([]int, error) {
 	}
 	wg.Wait()
 
-	failed, err := scan.BadPorts()
+	failed, err := scan.PortInfo()
 
 	if err != nil {
 		return nil, err
@@ -158,7 +141,7 @@ func (scan *Scan) Ping(port int) error {
 	return err
 }
 
-func (scan *Scan) BadPorts() ([]int, error) {
+func (scan *Scan) PortInfo() ([]util.PortStatus, error) {
 	url := scan.Apipath(fmt.Sprintf("/test/%v", scan.Id), scan.Apiport)
 
 	body, status, err := get(url)
@@ -175,7 +158,7 @@ func (scan *Scan) BadPorts() ([]int, error) {
 		return nil, err
 	}
 
-	ports := []int{}
+	ports := []util.PortStatus{}
 	dec := json.NewDecoder(body)
 	err = dec.Decode(&ports)
 
