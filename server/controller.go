@@ -29,7 +29,7 @@ func (tcase *testcase) handler() http.Handler {
 	r.Handle("/api/test/{resultset}/ping", tcase)
 
         // Use CORS to allow all origins.
-        handler := newcorshandler(r, fmt.Sprintf("http://%v", tcase.hostname))
+        handler := newcorshandler(r, fmt.Sprintf("http://%v", tcase.hostname), fmt.Sprintf("https://%v", tcase.hostname))
 
         return handler
 }
