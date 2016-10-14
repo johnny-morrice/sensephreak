@@ -8,6 +8,8 @@ It should be considered beta software at this stage.
 
 After running an example server command, visit the server in your browser.
 
+[Try a demo](https://outport.me)
+
 ## How to install from source
 
 The following command will install sensephreak and dependencies, assuming you
